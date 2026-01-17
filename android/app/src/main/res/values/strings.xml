@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Raksha</string>
+    <string name="accessibility_service_description">Raksha Safety Service - Detects emergency gestures and voice triggers system-wide to keep you safe. This service monitors for your selected emergency gestures and voice commands even when the screen is off or other apps are running.</string>
+</resources>

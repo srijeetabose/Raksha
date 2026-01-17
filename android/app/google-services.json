@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "438320612271",
+    "project_id": "raksha-11563",
+    "storage_bucket": "raksha-11563.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:438320612271:android:cd592d1810fab3722e255a",
+        "android_client_info": {
+          "package_name": "com.example.raksha"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBkKc2jjD2DfCMccICGvmYAh3kZBiGe_dE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:438320612271:android:301b9d57ff3c28ea2e255a",
+        "android_client_info": {
+          "package_name": "com.raksha.raksha"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBkKc2jjD2DfCMccICGvmYAh3kZBiGe_dE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,82 @@
+name: raksha
+description: "Your Silent Safety Companion"
+publish_to: 'none' # Prevents accidental publishing
+version: 1.0.0+1
+
+environment:
+  # The SDK constraint should be kept broad but compatible with your installed Flutter version (which is recent)
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.2
+
+  # Firebase Core Services (Authentication, Database, Storage)
+  firebase_core: ^2.27.0
+  firebase_auth: ^4.17.8
+  cloud_firestore: ^4.15.8
+  firebase_storage: ^11.6.9 
+
+  # Permissions and Triggers
+  permission_handler: ^11.3.1 
+  flutter_contacts: ^1.1.7 # For native contact picker
+  # Using native Android speech recognition via method channels
+
+  # Maps and Location Services
+  geolocator: ^11.0.0      # For continuous GPS tracking
+  flutter_map: ^6.0.0      # For displaying OpenStreetMap (OSM)
+  latlong2: ^0.9.0         # Coordinates for maps
+
+  # Security and Data Handling
+  local_auth: ^2.1.8       # For Fingerprint/Face ID access
+  crypto: ^3.0.3           # For SHA-256 PIN hashing
+  image_picker: ^1.0.7     # For Police ID camera capture
+  camera: ^0.10.5+9        # For camera preview and gesture detection
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  
+  flutter_lints: ^3.0.0 # Recommended linting rules
+  flutter_launcher_icons: ^0.13.1 # For custom app icons
+  flutter_native_splash: ^2.3.10  # For custom splash screen
+
+flutter:
+  uses-material-design: true
+  
+  # Assets (Images, TFLite Model)
+  assets:
+    - assets/images/ 
+    - assets/gesture_recognizer.task # MediaPipe task file used by GestureRecognizerHelper
+
+# Flutter Native Splash Screen Configuration
+flutter_native_splash:
+  color: "#6A5AE3"
+  image: assets/images/raksha_logo.png
+  color_dark: "#2D1B69"
+  image_dark: assets/images/raksha_logo.png
+  
+  android_12:
+    image: assets/images/raksha_logo.png
+    color: "#6A5AE3"
+    image_dark: assets/images/raksha_logo.png
+    color_dark: "#2D1B69"
+  
+  android: true
+  ios: true
+  web: false
+  fullscreen: true
+
+# Flutter Launcher Icons Configuration
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/raksha_logo.png"
+  min_sdk_android: 21
+  web:
+    generate: true
+    image_path: "assets/images/raksha_logo.png"
+    background_color: "#6A5AE3"
+    theme_color: "#6A5AE3"

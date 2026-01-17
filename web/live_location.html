@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raksha Emergency - Live Location</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            color: #d32f2f;
+            margin-bottom: 20px;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .status.active {
+            background-color: #ffebee;
+            color: #d32f2f;
+            border: 2px solid #d32f2f;
+        }
+        .status.inactive {
+            background-color: #e8f5e8;
+            color: #2e7d32;
+            border: 2px solid #2e7d32;
+        }
+        #map {
+            width: 100%;
+            height: 400px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .info-item {
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #666;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        .info-value {
+            font-size: 16px;
+            color: #333;
+            margin-top: 5px;
+        }
+        .actions {
+            text-align: center;
+        }
+        .btn {
+            padding: 12px 24px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-emergency {
+            background-color: #d32f2f;
+            color: white;
+        }
+        .btn-maps {
+            background-color: #1976d2;
+            color: white;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚨 Raksha Emergency Alert</h1>
+            <h2>Live Location Tracking</h2>
+        </div>
+
+        <div id="loading" class="loading">
+            <p>Loading emergency information...</p>
+        </div>
+
+        <div id="content" style="display: none;">
+            <div id="status" class="status">
+                <span id="statusText">Checking status...</span>
+            </div>
+
+            <div id="map"></div>
+
+            <div class="info">
+                <div class="info-item">
+                    <div class="info-label">Last Updated</div>
+                    <div class="info-value" id="lastUpdated">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Emergency Started</div>
+                    <div class="info-value" id="startTime">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Location Accuracy</div>
+                    <div class="info-value" id="accuracy">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Speed</div>
+                    <div class="info-value" id="speed">-</div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <a href="tel:911" class="btn btn-emergency">📞 Call Emergency Services</a>
+                <a id="openMaps" href="#" target="_blank" class="btn btn-maps">🗺️ Open in Google Maps</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    
+    <!-- Google Maps API -->
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&callback=initMap"></script>
+
+    <script>
+        // Firebase configuration for Raksha project
+        const firebaseConfig = {
+            apiKey: "AIzaSyARRMGOCJdAwr1y5dExOUFJXKfpqCt5rE",
+            authDomain: "raksha-11563.firebaseapp.com",
+            projectId: "raksha-11563",
+            storageBucket: "raksha-11563.appspot.com",
+            messagingSenderId: "430320612271",
+            appId: "1:430320612271:web:raksha"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        let map;
+        let marker;
+        let emergencySessionId;
+
+        // Get session ID from URL
+        function getSessionId() {
+            const path = window.location.pathname;
+            const parts = path.split('/');
+            return parts[parts.length - 1];
+        }
+
+        // Initialize Google Map
+        function initMap() {
+            map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 15,
+                center: { lat: 0, lng: 0 }
+            });
+            
+            marker = new google.maps.Marker({
+                map: map,
+                title: 'Emergency Location',
+                icon: {
+                    url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="#d32f2f">
+                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                        </svg>
+                    `),
+                    scaledSize: new google.maps.Size(40, 40)
+                }
+            });
+
+            // Start tracking
+            startTracking();
+        }
+
+        // Start tracking emergency session
+        function startTracking() {
+            emergencySessionId = getSessionId();
+            
+            if (!emergencySessionId) {
+                document.getElementById('loading').innerHTML = '<p style="color: red;">Invalid emergency session ID</p>';
+                return;
+            }
+
+            // Listen for real-time updates
+            db.collection('emergency_sessions').doc(emergencySessionId)
+                .onSnapshot((doc) => {
+                    if (doc.exists) {
+                        updateDisplay(doc.data());
+                    } else {
+                        document.getElementById('loading').innerHTML = '<p style="color: red;">Emergency session not found</p>';
+                    }
+                }, (error) => {
+                    console.error('Error listening to updates:', error);
+                    document.getElementById('loading').innerHTML = '<p style="color: red;">Error loading emergency data</p>';
+                });
+        }
+
+        // Update display with new data
+        function updateDisplay(data) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('content').style.display = 'block';
+
+            const status = document.getElementById('status');
+            const statusText = document.getElementById('statusText');
+
+            if (data.isActive) {
+                status.className = 'status active';
+                statusText.textContent = '🚨 EMERGENCY ACTIVE - Location updating live';
+            } else {
+                status.className = 'status inactive';
+                statusText.textContent = '✅ Emergency resolved - Location sharing stopped';
+            }
+
+            // Update location on map
+            if (data.currentLocation) {
+                const lat = data.currentLocation.latitude;
+                const lng = data.currentLocation.longitude;
+                
+                const position = { lat, lng };
+                map.setCenter(position);
+                marker.setPosition(position);
+
+                // Update Google Maps link
+                document.getElementById('openMaps').href = `https://maps.google.com/maps?q=${lat},${lng}`;
+
+                // Update info
+                document.getElementById('accuracy').textContent = 
+                    data.currentLocation.accuracy ? `±${Math.round(data.currentLocation.accuracy)}m` : 'Unknown';
+                
+                document.getElementById('speed').textContent = 
+                    data.currentLocation.speed ? `${Math.round(data.currentLocation.speed * 3.6)} km/h` : '0 km/h';
+            }
+
+            // Update timestamps
+            if (data.startTime) {
+                document.getElementById('startTime').textContent = 
+                    new Date(data.startTime.toDate()).toLocaleString();
+            }
+
+            if (data.lastUpdated) {
+                document.getElementById('lastUpdated').textContent = 
+                    new Date(data.lastUpdated.toDate()).toLocaleString();
+            } else if (data.currentLocation && data.currentLocation.timestamp) {
+                document.getElementById('lastUpdated').textContent = 
+                    new Date(data.currentLocation.timestamp.toDate()).toLocaleString();
+            }
+        }
+
+        // Auto-refresh every 5 seconds as backup
+        setInterval(() => {
+            if (emergencySessionId) {
+                console.log('Auto-refresh check...');
+            }
+        }, 5000);
+    </script>
+</body>
+</html>
