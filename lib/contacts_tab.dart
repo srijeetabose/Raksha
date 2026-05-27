@@ -1,4 +1,4 @@
-// lib/contacts_tab.dart
+﻿// lib/contacts_tab.dart
 
 import 'package:flutter/material.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
@@ -93,7 +93,7 @@ class _ContactsTabState extends State<ContactsTab> {
         }
       }
     } catch (e) {
-      print("Contact picker error: $e");
+      // debug removed
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Failed to access contacts: ${e.toString()}")));
@@ -163,10 +163,10 @@ class _ContactsTabState extends State<ContactsTab> {
           child: const Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text("🚨 EMERGENCY ALERT from [Name]", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
+              Text(" EMERGENCY ALERT from [Name]", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
               SizedBox(height: 8),
-              Text("📍 Current location: [Location]", style: TextStyle(color: Colors.black54)),
-              Text("🔗 Live location: [Link]", style: TextStyle(color: Colors.black54)),
+              Text(" Current location: [Location]", style: TextStyle(color: Colors.black54)),
+              Text("� Live location: [Link]", style: TextStyle(color: Colors.black54)),
               SizedBox(height: 8),
               Text("Please respond immediately! This is an automated Raksha safety alert.", style: TextStyle(fontStyle: FontStyle.italic, color: Colors.black54)),
             ],

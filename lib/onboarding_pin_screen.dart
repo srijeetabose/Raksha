@@ -1,4 +1,4 @@
-// lib/onboarding_pin_screen.dart
+﻿// lib/onboarding_pin_screen.dart
 
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -57,11 +57,11 @@ class _OnboardingPinScreenState extends State<OnboardingPinScreen> {
       }
       
       final userId = user.uid;
-      print("📝 Saving PIN for user: $userId");
+      // debug removed
       
       // CRITICAL: HASH THE PIN BEFORE STORING IT
       final pinHash = hashPin(pin);
-      print("🔐 PIN hashed successfully");
+      // debug removed
 
       // Use set with merge:true instead of update to create document if it doesn't exist
       await FirebaseFirestore.instance
@@ -73,7 +73,7 @@ class _OnboardingPinScreenState extends State<OnboardingPinScreen> {
             'pinSetAt': FieldValue.serverTimestamp(),
           }, SetOptions(merge: true));
 
-      print("✅ PIN saved successfully to Firestore");
+      // debug removed
       
       // Verify it was saved
       final doc = await FirebaseFirestore.instance
@@ -82,7 +82,7 @@ class _OnboardingPinScreenState extends State<OnboardingPinScreen> {
           .get();
       
       if (doc.exists && doc.data()?['secureVaultPinHash'] != null) {
-        print("✅ PIN verified in Firestore");
+        // debug removed
         _showSnackBar("Secure Vault PIN Set!");
         
         // Wait a moment for user to see success message
@@ -95,13 +95,13 @@ class _OnboardingPinScreenState extends State<OnboardingPinScreen> {
               (route) => false);
         }
       } else {
-        print("❌ PIN not found in Firestore after save");
+        // debug removed
         _showSnackBar("Failed to verify PIN. Please try again.");
       }
 
     } catch (e, stackTrace) {
-      print("❌ Error saving PIN: $e");
-      print("Stack trace: $stackTrace");
+      // debug removed
+      // debug removed
       _showSnackBar("Failed to save PIN. Error: ${e.toString()}");
     } finally {
       if (mounted) setState(() => _isLoading = false);

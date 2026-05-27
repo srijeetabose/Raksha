@@ -1,4 +1,4 @@
-// lib/onboarding_biometric_screen.dart
+﻿// lib/onboarding_biometric_screen.dart
 
 import 'package:flutter/material.dart';
 import 'package:local_auth/local_auth.dart';
@@ -59,7 +59,7 @@ class _OnboardingBiometricScreenState extends State<OnboardingBiometricScreen> {
         return;
       }
       
-      print("Available biometrics: $availableBiometrics");
+      // debug removed
       
       // Try biometric-only first, then fallback to device credentials
       bool didAuthenticate = false;
@@ -74,7 +74,7 @@ class _OnboardingBiometricScreenState extends State<OnboardingBiometricScreen> {
           ),
         );
       } catch (biometricError) {
-        print("Biometric-only failed: $biometricError");
+        // debug removed
         
         // Fallback to device credentials (PIN/Pattern/Password)
         try {
@@ -87,7 +87,7 @@ class _OnboardingBiometricScreenState extends State<OnboardingBiometricScreen> {
             ),
           );
         } catch (fallbackError) {
-          print("Fallback authentication failed: $fallbackError");
+          // debug removed
           throw fallbackError; // Re-throw to be handled by outer catch
         }
       }
@@ -102,7 +102,7 @@ class _OnboardingBiometricScreenState extends State<OnboardingBiometricScreen> {
         _finalizeAndNavigate();
       }
     } catch (e) {
-      print("Biometric error: $e");
+      // debug removed
       // Handle the use_build_context_synchronously warning by checking mounted
       if (mounted) {
         String errorMessage = "Biometric setup failed. You can set this up later in Settings.";
@@ -145,7 +145,7 @@ class _OnboardingBiometricScreenState extends State<OnboardingBiometricScreen> {
         });
       }
     } catch (e) {
-      print("Error saving biometric flag: $e");
+      // debug removed
     }
   }
   

@@ -1,4 +1,4 @@
-// lib/sos_service_channel.dart
+﻿// lib/sos_service_channel.dart
 import 'package:flutter/services.dart';
 
 // Defines the communication channel name (MUST match Android code)
@@ -13,7 +13,7 @@ class SosServiceChannel {
         'voiceWords': voiceWords,
       });
     } on PlatformException catch (e) {
-      print("Failed to start service: ${e.message}");
+      // debug removed
     }
   }
 
@@ -22,7 +22,7 @@ class SosServiceChannel {
     try {
       await _channel.invokeMethod('cancelTrigger');
     } on PlatformException catch (e) {
-      print("Failed to cancel trigger: ${e.message}");
+      // debug removed
     }
   }
 
@@ -31,7 +31,7 @@ class SosServiceChannel {
     try {
       await _channel.invokeMethod('stopActiveSos');
     } on PlatformException catch (e) {
-      print("Failed to stop active SOS: ${e.message}");
+      // debug removed
     }
   }
 }

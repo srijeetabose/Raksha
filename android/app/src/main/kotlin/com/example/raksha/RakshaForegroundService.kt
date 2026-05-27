@@ -1,4 +1,4 @@
-package com.example.raksha
+﻿package com.example.raksha
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -59,7 +59,7 @@ class RakshaForegroundService : Service(), RecognitionListener, SensorEventListe
 
     private val safeReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            Log.d(TAG, "✅ I AM SAFE — resetting cooldown")
+            Log.d(TAG, " I AM SAFE — resetting cooldown")
             lastTriggerTime = 0L
         }
     }
@@ -88,10 +88,10 @@ class RakshaForegroundService : Service(), RecognitionListener, SensorEventListe
         accelerometer = sensorManager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
         accelerometer?.let {
             sensorManager?.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL)
-            Log.d(TAG, "✅ Shake detection started")
+            Log.d(TAG, " Shake detection started")
         }
 
-        Log.d(TAG, "✅ RakshaForegroundService created")
+        Log.d(TAG, " RakshaForegroundService created")
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -101,7 +101,7 @@ class RakshaForegroundService : Service(), RecognitionListener, SensorEventListe
         if (!passedTriggers.isNullOrEmpty()) {
             voiceTriggers.clear()
             passedTriggers.forEach { voiceTriggers.add(it.lowercase()) }
-            Log.d(TAG, "✅ Got ${voiceTriggers.size} triggers: $voiceTriggers")
+            Log.d(TAG, " Got ${voiceTriggers.size} triggers: $voiceTriggers")
             isListeningForVoice = false
             speechRecognizer?.destroy()
             speechRecognizer = null
@@ -138,8 +138,7 @@ class RakshaForegroundService : Service(), RecognitionListener, SensorEventListe
 
     override fun onBind(intent: Intent?): IBinder? = null
 
-    // ── Firebase trigger loading ──────────────────────────────────────────────
-
+    
     private fun loadTriggersFromFirebaseThenStart() {
         try {
             val userId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
@@ -152,13 +151,13 @@ class RakshaForegroundService : Service(), RecognitionListener, SensorEventListe
                         if (raw != null) {
                             voiceTriggers.clear()
                             raw.filterIsInstance<String>().forEach { voiceTriggers.add(it.lowercase()) }
-                            Log.d(TAG, "✅ Firebase triggers: $voiceTriggers")
+                            Log.d(TAG, " Firebase triggers: $voiceTriggers")
                         } else {
                             setDefaultTriggers()
                         }
                         // Load language preference
                         voiceLanguage = doc.getString("voiceLanguage") ?: "en-IN"
-                        Log.d(TAG, "✅ Voice language: $voiceLanguage")
+                        Log.d(TAG, " Voice language: $voiceLanguage")
                         startVoiceDetection()
                     }
                     .addOnFailureListener {
@@ -180,22 +179,21 @@ class RakshaForegroundService : Service(), RecognitionListener, SensorEventListe
         voiceTriggers.addAll(listOf("help", "danger", "emergency", "police", "rescue"))
     }
 
-    // ── Voice detection ───────────────────────────────────────────────────────
-
+    
     private fun startVoiceDetection() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (checkSelfPermission(android.Manifest.permission.RECORD_AUDIO)
                 != PackageManager.PERMISSION_GRANTED) {
-                Log.e(TAG, "❌ RECORD_AUDIO not granted — retrying in 30s")
+                Log.e(TAG, " RECORD_AUDIO not granted — retrying in 30s")
                 handler.postDelayed({ startVoiceDetection() }, 30000)
                 return
             }
         }
         if (!SpeechRecognizer.isRecognitionAvailable(this)) {
-            Log.e(TAG, "❌ Speech recognition not available")
+            Log.e(TAG, " Speech recognition not available")
             return
         }
-        Log.d(TAG, "🎤 Starting SpeechRecognizer with: $voiceTriggers")
+        Log.d(TAG, " Starting SpeechRecognizer with: $voiceTriggers")
         speechRecognizer?.destroy()
         speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
         speechRecognizer?.setRecognitionListener(this)
@@ -222,7 +220,7 @@ class RakshaForegroundService : Service(), RecognitionListener, SensorEventListe
             }
             isListeningForVoice = true
             speechRecognizer?.startListening(intent)
-            Log.d(TAG, "🎤 Listening... triggers=$voiceTriggers")
+            Log.d(TAG, " Listening... triggers=$voiceTriggers")
         } catch (e: Exception) {
             Log.e(TAG, "Error: ${e.message}")
             isListeningForVoice = false
@@ -230,9 +228,8 @@ class RakshaForegroundService : Service(), RecognitionListener, SensorEventListe
         }
     }
 
-    // ── RecognitionListener ───────────────────────────────────────────────────
-
-    override fun onReadyForSpeech(params: Bundle?) { Log.d(TAG, "🎤 Ready") }
+    
+    override fun onReadyForSpeech(params: Bundle?) { Log.d(TAG, " Ready") }
     override fun onBeginningOfSpeech() {}
     override fun onRmsChanged(rmsdB: Float) {}
     override fun onBufferReceived(buffer: ByteArray?) {}
@@ -257,7 +254,7 @@ class RakshaForegroundService : Service(), RecognitionListener, SensorEventListe
         if (!matches.isNullOrEmpty()) {
             for (match in matches) {
                 val spoken = match.trim()
-                Log.d(TAG, "🎤 Heard: '$spoken'")
+                Log.d(TAG, " Heard: '$spoken'")
                 // Run NLP distress detection pipeline
                 analyzeForDistress(spoken)
             }
@@ -274,8 +271,7 @@ class RakshaForegroundService : Service(), RecognitionListener, SensorEventListe
         }
     }
 
-    // ── NLP Distress Detection Pipeline ──────────────────────────────────────
-
+    
     private val distressKeywords = setOf(
         // English distress phrases
         "help", "danger", "emergency", "police", "rescue", "attack",
@@ -294,7 +290,7 @@ class RakshaForegroundService : Service(), RecognitionListener, SensorEventListe
         val cleaned = spokenLower.replace("raksha", "").trim()
         for (trigger in voiceTriggers) {
             if (spokenLower.contains(trigger) || cleaned.contains(trigger)) {
-                Log.d(TAG, "🚨 TRIGGER WORD MATCH: '$trigger'")
+                Log.d(TAG, " TRIGGER WORD MATCH: '$trigger'")
                 triggerEmergency("Voice: $trigger", spokenText)
                 handler.postDelayed({ startContinuousListening() }, 20000)
                 return
@@ -305,7 +301,7 @@ class RakshaForegroundService : Service(), RecognitionListener, SensorEventListe
         val languageIdentifier = com.google.mlkit.nl.languageid.LanguageIdentification.getClient()
         languageIdentifier.identifyLanguage(spokenText)
             .addOnSuccessListener { languageCode ->
-                Log.d(TAG, "🌐 Detected language: $languageCode")
+                Log.d(TAG, " Detected language: $languageCode")
                 if (languageCode == "en" || languageCode == "und") {
                     // Already English or unknown — check directly
                     checkEnglishForDistress(spokenText)
@@ -334,7 +330,7 @@ class RakshaForegroundService : Service(), RecognitionListener, SensorEventListe
                 val json = org.json.JSONObject(response)
                 val translated = json.getJSONObject("responseData")
                     .getString("translatedText")
-                Log.d(TAG, "🌐 Translated: '$text' → '$translated'")
+                Log.d(TAG, " Translated: '$text' → '$translated'")
                 handler.post { checkEnglishForDistress(translated) }
             } catch (e: Exception) {
                 Log.e(TAG, "Translation failed: ${e.message}")
@@ -348,17 +344,16 @@ class RakshaForegroundService : Service(), RecognitionListener, SensorEventListe
         val lower = text.lowercase()
         for (keyword in distressKeywords) {
             if (lower.contains(keyword)) {
-                Log.d(TAG, "🚨 NLP DISTRESS DETECTED: '$keyword' in '$lower'")
+                Log.d(TAG, " NLP DISTRESS DETECTED: '$keyword' in '$lower'")
                 triggerEmergency("Distress: $keyword", text)
                 handler.postDelayed({ startContinuousListening() }, 20000)
                 return
             }
         }
-        Log.d(TAG, "✅ No distress detected in: '$lower'")
+        Log.d(TAG, " No distress detected in: '$lower'")
     }
 
-    // ── Shake detection ───────────────────────────────────────────────────────
-
+    
     override fun onSensorChanged(event: SensorEvent?) {
         if (event?.sensor?.type != Sensor.TYPE_ACCELEROMETER) return
         val x = event.values[0]; val y = event.values[1]; val z = event.values[2]
@@ -370,7 +365,7 @@ class RakshaForegroundService : Service(), RecognitionListener, SensorEventListe
             lastShakeTime = now
             if (shakeCount >= SHAKE_COUNT_REQUIRED) {
                 shakeCount = 0
-                Log.d(TAG, "🚨 SHAKE TRIGGER!")
+                Log.d(TAG, " SHAKE TRIGGER!")
                 triggerEmergency("Shake", "device shaken")
             }
         }
@@ -378,19 +373,18 @@ class RakshaForegroundService : Service(), RecognitionListener, SensorEventListe
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
 
-    // ── Emergency trigger ─────────────────────────────────────────────────────
-
+    
     private fun triggerEmergency(trigger: String, fullText: String) {
         val now = System.currentTimeMillis()
         if (now - lastTriggerTime < TRIGGER_COOLDOWN_MS) {
-            Log.d(TAG, "⏳ Cooldown — ignoring '$trigger'")
+            Log.d(TAG, " Cooldown — ignoring '$trigger'")
             return
         }
         lastTriggerTime = now
 
         try {
             handler.post {
-                android.widget.Toast.makeText(this, "🚨 $trigger", android.widget.Toast.LENGTH_LONG).show()
+                android.widget.Toast.makeText(this, " $trigger", android.widget.Toast.LENGTH_LONG).show()
             }
 
             // Start SOSNotificationService — shows 10s countdown notification with CANCEL button
@@ -427,8 +421,7 @@ class RakshaForegroundService : Service(), RecognitionListener, SensorEventListe
         }
     }
 
-    // ── Notifications ─────────────────────────────────────────────────────────
-
+    
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
@@ -445,7 +438,7 @@ class RakshaForegroundService : Service(), RecognitionListener, SensorEventListe
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("🛡️ Raksha Active")
+            .setContentTitle(" Raksha Active")
             .setContentText("Voice & shake detection running")
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setOngoing(true)

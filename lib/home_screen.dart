@@ -1,4 +1,4 @@
-// lib/home_screen.dart
+﻿// lib/home_screen.dart
 // This file acts as the main Router/Wrapper for the Home Dashboard.
 
 import 'dart:async';
@@ -55,7 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
         'triggers': ['help me', 'emergency', 'call police'],
       });
     } catch (e) {
-      print("❌ Error starting background services: $e");
+      // debug removed
     }
   }
 
@@ -76,7 +76,7 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       }
     } catch (e) {
-      print("Error checking police role: $e");
+      // debug removed
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -302,8 +302,8 @@ class _PoliceAlertsDashboardState extends State<PoliceAlertsDashboard> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(newValue
-              ? '✅ You are now Active — receiving alerts'
-              : '🔴 You are now Inactive'),
+              ? ' You are now Active — receiving alerts'
+              : '� You are now Inactive'),
           backgroundColor: newValue ? Colors.green : Colors.red,
         ));
       }
@@ -370,7 +370,7 @@ class _PoliceAlertsDashboardState extends State<PoliceAlertsDashboard> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('🚨 Responding to Alert'),
+        title: const Text(' Responding to Alert'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -671,7 +671,7 @@ class _PoliceAlertsDashboardState extends State<PoliceAlertsDashboard> {
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
-                        isResponding ? '🚔 RESPONDING' : '🚨 SOS ACTIVE',
+                        isResponding ? '� RESPONDING' : ' SOS ACTIVE',
                         style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,

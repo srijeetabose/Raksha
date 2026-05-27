@@ -1,4 +1,4 @@
-package com.example.raksha
+﻿package com.example.raksha
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -56,7 +56,7 @@ class MainActivity :
                 val gesture = intent.getStringExtra("gesture") ?: "Unknown"
                 val source = intent.getStringExtra("source") ?: "Unknown"
                 
-                Log.d("MainActivity", "🚨 EMERGENCY BROADCAST RECEIVED: $gesture from $source")
+                Log.d("MainActivity", " EMERGENCY BROADCAST RECEIVED: $gesture from $source")
                 
                 // Trigger full SOS sequence
                 triggerFullSOSSequence(gesture)
@@ -98,7 +98,7 @@ class MainActivity :
         // Handle intent extras for SOS cancellation
         handleSOSIntentExtras()
         
-        Log.d("MainActivity", "✅ Emergency broadcast receiver registered")
+        Log.d("MainActivity", " Emergency broadcast receiver registered")
     }
 
     private fun requestBatteryOptimizationExemption() {
@@ -110,7 +110,7 @@ class MainActivity :
                         data = android.net.Uri.parse("package:$packageName")
                     }
                     startActivity(intent)
-                    Log.d("MainActivity", "✅ Requested battery optimization exemption")
+                    Log.d("MainActivity", " Requested battery optimization exemption")
                 }
             }
         } catch (e: Exception) {
@@ -123,43 +123,43 @@ class MainActivity :
             val intent = intent
             
             if (intent.getBooleanExtra("SHOW_CANCEL", false)) {
-                Log.d("MainActivity", "🏠 App opened to show cancel option")
+                Log.d("MainActivity", "� App opened to show cancel option")
                 // Show cancel dialog immediately
                 showCancelSOSDialog()
             }
             
             if (intent.getBooleanExtra("CANCEL_SOS", false)) {
                 val gesture = intent.getStringExtra("GESTURE") ?: "Unknown"
-                Log.d("MainActivity", "🛑 SOS cancelled from home screen for gesture: $gesture")
+                Log.d("MainActivity", " SOS cancelled from home screen for gesture: $gesture")
                 cancelAllSOSSequence()
                 
                 // Show confirmation
                 runOnUiThread {
-                    android.widget.Toast.makeText(this, "🛑 Emergency SOS Cancelled", android.widget.Toast.LENGTH_LONG).show()
+                    android.widget.Toast.makeText(this, " Emergency SOS Cancelled", android.widget.Toast.LENGTH_LONG).show()
                 }
             }
             
             // Handle vibration phase cancellation
             if (intent.action == "CANCEL_SOS_VIBRATION") {
                 val gesture = intent.getStringExtra("gesture") ?: "Unknown"
-                Log.d("MainActivity", "🛑 SOS cancelled during vibration phase for gesture: $gesture")
+                Log.d("MainActivity", " SOS cancelled during vibration phase for gesture: $gesture")
                 cancelSOSDuringVibration()
                 
                 // Show confirmation
                 runOnUiThread {
-                    android.widget.Toast.makeText(this, "🛑 Emergency SOS Cancelled During Vibration", android.widget.Toast.LENGTH_LONG).show()
+                    android.widget.Toast.makeText(this, " Emergency SOS Cancelled During Vibration", android.widget.Toast.LENGTH_LONG).show()
                 }
             }
             
             // Handle showing vibration cancel dialog
             if (intent.getBooleanExtra("SHOW_VIBRATION_CANCEL", false)) {
                 val gesture = intent.getStringExtra("GESTURE") ?: "Unknown"
-                Log.d("MainActivity", "📱 App opened during vibration phase - showing cancel dialog")
+                Log.d("MainActivity", " App opened during vibration phase - showing cancel dialog")
                 showVibrationCancelDialog(gesture)
             }
             
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error handling SOS intent extras: ${e.message}")
+            Log.e("MainActivity", " Error handling SOS intent extras: ${e.message}")
         }
     }
     
@@ -207,12 +207,12 @@ class MainActivity :
                             putStringArrayListExtra("GESTURES_KEY", ArrayList(gestures))
                         }
                         startForegroundService(serviceIntent)
-                        Log.d("MainActivity", "✅ Background service started via startListener with ${voiceWords.size} voice triggers")
+                        Log.d("MainActivity", " Background service started via startListener with ${voiceWords.size} voice triggers")
                         result.success("Background service started")
                     }
                     "sendTestAlert" -> {
                         sendTestAlert()
-                        Log.d("MainActivity", "📱 Test alert sent")
+                        Log.d("MainActivity", " Test alert sent")
                         result.success("Test alert sent")
                     }
                     "sendEmergencySMS" -> {
@@ -251,7 +251,7 @@ class MainActivity :
                     }
                     "sendIAmSafeBroadcast" -> {
                         sendBroadcast(Intent("com.example.raksha.I_AM_SAFE"))
-                        Log.d("MainActivity", "✅ I AM SAFE broadcast sent")
+                        Log.d("MainActivity", " I AM SAFE broadcast sent")
                         result.success("Safe broadcast sent")
                     }
                     "openUrl" -> {
@@ -311,12 +311,12 @@ class MainActivity :
                                 val gestures =
                                         call.argument<List<String>>("gestures") ?: emptyList()
                                 startGestureDetectionService(gestures)
-                                Log.d("MainActivity", "🚀 Gesture service started with: $gestures")
+                                Log.d("MainActivity", " Gesture service started with: $gestures")
                                 result.success("Gesture service started")
                             }
                             "stopGestureService" -> {
                                 stopGestureDetectionService()
-                                Log.d("MainActivity", "🛑 Gesture service stopped")
+                                Log.d("MainActivity", " Gesture service stopped")
                                 result.success("Gesture service stopped")
                             }
                             "showSOSNotification" -> {
@@ -485,7 +485,7 @@ class MainActivity :
                             else -> result.notImplemented()
                         }
                     } catch (e: Exception) {
-                        Log.e("MainActivity", "❌ Gesture service error: ${e.message}")
+                        Log.e("MainActivity", " Gesture service error: ${e.message}")
                         result.error(
                                 "ERROR",
                                 "Failed to execute gesture method: ${e.message}",
@@ -527,7 +527,7 @@ class MainActivity :
                                 val videoPath = call.argument<String>("videoPath")
                                 val gesture = call.argument<String>("gesture") ?: "Unknown"
                                 
-                                Log.d("MainActivity", "🎵 ========== CHECK AND PLAY ==========")
+                                Log.d("MainActivity", "� ========== CHECK AND PLAY ==========")
                                 Log.d("MainActivity", "Audio path: $audioPath")
                                 Log.d("MainActivity", "Video path: $videoPath")
                                 
@@ -541,10 +541,10 @@ class MainActivity :
                                 // List all files in secure vault directory
                                 val secureVaultDir = java.io.File(filesDir, ".secure_vault")
                                 if (secureVaultDir.exists()) {
-                                    Log.d("MainActivity", "📂 Secure vault directory exists")
+                                    Log.d("MainActivity", "� Secure vault directory exists")
                                     val files = secureVaultDir.listFiles()
                                     if (files != null && files.isNotEmpty()) {
-                                        Log.d("MainActivity", "📂 Files in secure vault: ${files.size}")
+                                        Log.d("MainActivity", "� Files in secure vault: ${files.size}")
                                         var totalSize = 0L
                                         var emptyFiles = 0
                                         files.forEach { file ->
@@ -552,27 +552,27 @@ class MainActivity :
                                             totalSize += file.length()
                                             if (file.length() == 0L) emptyFiles++
                                         }
-                                        Log.d("MainActivity", "📊 Total size: $totalSize bytes, Empty files: $emptyFiles")
+                                        Log.d("MainActivity", "� Total size: $totalSize bytes, Empty files: $emptyFiles")
                                         
                                         // Show toast with file info
                                         android.widget.Toast.makeText(
                                             this,
-                                            "📂 Vault: ${files.size} files\n💾 Total: ${totalSize / 1024}KB\n⚠️ Empty: $emptyFiles",
+                                            "� Vault: ${files.size} files\n Total: ${totalSize / 1024}KB\n Empty: $emptyFiles",
                                             android.widget.Toast.LENGTH_LONG
                                         ).show()
                                     } else {
-                                        Log.e("MainActivity", "❌ Secure vault directory is EMPTY!")
+                                        Log.e("MainActivity", " Secure vault directory is EMPTY!")
                                         android.widget.Toast.makeText(
                                             this,
-                                            "❌ Secure vault is EMPTY!\n\nRecording is NOT working.\nCheck camera/microphone permissions.",
+                                            " Secure vault is EMPTY!\n\nRecording is NOT working.\nCheck camera/microphone permissions.",
                                             android.widget.Toast.LENGTH_LONG
                                         ).show()
                                     }
                                 } else {
-                                    Log.e("MainActivity", "❌ Secure vault directory does NOT exist!")
+                                    Log.e("MainActivity", " Secure vault directory does NOT exist!")
                                     android.widget.Toast.makeText(
                                         this,
-                                        "❌ Secure vault directory doesn't exist!\n\nRecording service never started.",
+                                        " Secure vault directory doesn't exist!\n\nRecording service never started.",
                                         android.widget.Toast.LENGTH_LONG
                                     ).show()
                                 }
@@ -582,15 +582,15 @@ class MainActivity :
                                     playRecordingSimple(audioPath, videoPath, gesture)
                                     result.success("Playing recording")
                                 } else {
-                                    Log.e("MainActivity", "❌ NO FILES FOUND - Recording may have failed!")
-                                    android.widget.Toast.makeText(this, "❌ Recording files not found. Recording may have failed.", android.widget.Toast.LENGTH_LONG).show()
+                                    Log.e("MainActivity", " NO FILES FOUND - Recording may have failed!")
+                                    android.widget.Toast.makeText(this, " Recording files not found. Recording may have failed.", android.widget.Toast.LENGTH_LONG).show()
                                     result.error("NO_FILES", "Recording files not found. Recording may have failed.", null)
                                 }
                             }
                             else -> result.notImplemented()
                         }
                     } catch (e: Exception) {
-                        Log.e("MainActivity", "❌ Playback error: ${e.message}")
+                        Log.e("MainActivity", " Playback error: ${e.message}")
                         e.printStackTrace()
                         result.error("ERROR", "Failed to play recording: ${e.message}", null)
                     }
@@ -616,7 +616,7 @@ class MainActivity :
         try {
             val smsManager = android.telephony.SmsManager.getDefault()
             val testMessage =
-                    "🧪 TEST ALERT from Raksha app. This is a test of the emergency alert system. If this was a real emergency, you would receive location and emergency details."
+                    " TEST ALERT from Raksha app. This is a test of the emergency alert system. If this was a real emergency, you would receive location and emergency details."
 
             // For testing - replace with actual emergency contacts
             val testNumbers = listOf("1234567890") // Replace with actual numbers
@@ -624,13 +624,13 @@ class MainActivity :
             for (number in testNumbers) {
                 try {
                     smsManager.sendTextMessage(number, null, testMessage, null, null)
-                    Log.d("MainActivity", "📱 Test SMS sent to: $number")
+                    Log.d("MainActivity", " Test SMS sent to: $number")
                 } catch (e: Exception) {
-                    Log.e("MainActivity", "❌ Failed to send test SMS to $number: ${e.message}")
+                    Log.e("MainActivity", " Failed to send test SMS to $number: ${e.message}")
                 }
             }
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error sending test alert: ${e.message}")
+            Log.e("MainActivity", " Error sending test alert: ${e.message}")
         }
     }
 
@@ -644,13 +644,13 @@ class MainActivity :
 
             if (parts.size == 1) {
                 smsManager.sendTextMessage(phoneNumber, null, message, null, null)
-                Log.d("MainActivity", "📱 Emergency SMS sent to: $phoneNumber")
+                Log.d("MainActivity", " Emergency SMS sent to: $phoneNumber")
             } else {
                 smsManager.sendMultipartTextMessage(phoneNumber, null, parts, null, null)
-                Log.d("MainActivity", "📱 Emergency SMS (multipart) sent to: $phoneNumber")
+                Log.d("MainActivity", " Emergency SMS (multipart) sent to: $phoneNumber")
             }
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Failed to send emergency SMS to $phoneNumber: ${e.message}")
+            Log.e("MainActivity", " Failed to send emergency SMS to $phoneNumber: ${e.message}")
         }
     }
 
@@ -673,7 +673,7 @@ class MainActivity :
 
         val notification =
                 NotificationCompat.Builder(this, "RAKSHA_SOS_CHANNEL")
-                        .setContentTitle("🚨 EMERGENCY DETECTED!")
+                        .setContentTitle(" EMERGENCY DETECTED!")
                         .setContentText("Gesture: $gesture - SOS in ${countdown}s")
                         .setSmallIcon(android.R.drawable.ic_dialog_alert)
                         .setPriority(NotificationCompat.PRIORITY_MAX)
@@ -708,16 +708,16 @@ class MainActivity :
 
         stopVibration()
 
-        Log.d("MainActivity", "🛑 SOS sequence cancelled")
+        Log.d("MainActivity", " SOS sequence cancelled")
     }
     
     private fun stopVibration() {
         try {
             val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as android.os.Vibrator
             vibrator.cancel()
-            Log.d("MainActivity", "🛑 Vibration stopped")
+            Log.d("MainActivity", " Vibration stopped")
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error stopping vibration: ${e.message}")
+            Log.e("MainActivity", " Error stopping vibration: ${e.message}")
         }
     }
     
@@ -730,15 +730,15 @@ class MainActivity :
             val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.cancelAll()
             
-            Log.d("MainActivity", "🛑 ALL SOS sequences cancelled")
+            Log.d("MainActivity", " ALL SOS sequences cancelled")
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error cancelling all SOS: ${e.message}")
+            Log.e("MainActivity", " Error cancelling all SOS: ${e.message}")
         }
     }
     
     private fun startVibrationPhase(duration: Int, gesture: String) {
         try {
-            Log.d("MainActivity", "📳 Starting ${duration}s vibration phase for $gesture")
+            Log.d("MainActivity", " Starting ${duration}s vibration phase for $gesture")
             
             val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as android.os.Vibrator
             
@@ -754,7 +754,7 @@ class MainActivity :
             }
             
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error starting vibration phase: ${e.message}")
+            Log.e("MainActivity", " Error starting vibration phase: ${e.message}")
         }
     }
     
@@ -785,7 +785,7 @@ class MainActivity :
             )
             
             val notification = NotificationCompat.Builder(this, "RAKSHA_SOS_CHANNEL")
-                .setContentTitle("🚨 7-SECOND VIBRATION PHASE")
+                .setContentTitle(" 7-SECOND VIBRATION PHASE")
                 .setContentText("$message - Tap CANCEL NOW or SOS will activate!")
                 .setSmallIcon(android.R.drawable.ic_dialog_alert)
                 .setPriority(NotificationCompat.PRIORITY_MAX)
@@ -801,13 +801,13 @@ class MainActivity :
             notificationManager.notify(2001, notification)
             
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error showing open app notification: ${e.message}")
+            Log.e("MainActivity", " Error showing open app notification: ${e.message}")
         }
     }
     
     private fun showHomeScreenCancel(gesture: String, duration: Int) {
         try {
-            Log.d("MainActivity", "🏠 Showing home screen cancel for ${duration}s")
+            Log.d("MainActivity", "� Showing home screen cancel for ${duration}s")
             
             val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             
@@ -822,7 +822,7 @@ class MainActivity :
             )
             
             val notification = NotificationCompat.Builder(this, "RAKSHA_SOS_CHANNEL")
-                .setContentTitle("🚨 FINAL CHANCE TO CANCEL")
+                .setContentTitle(" FINAL CHANCE TO CANCEL")
                 .setContentText("SOS will activate in ${duration/60} minutes. Tap to cancel!")
                 .setSmallIcon(android.R.drawable.ic_dialog_alert)
                 .setPriority(NotificationCompat.PRIORITY_MAX)
@@ -837,13 +837,13 @@ class MainActivity :
             notificationManager.notify(3001, notification)
             
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error showing home screen cancel: ${e.message}")
+            Log.e("MainActivity", " Error showing home screen cancel: ${e.message}")
         }
     }
     
     private fun triggerFinalSOSSequence(gesture: String) {
         try {
-            Log.d("MainActivity", "🚨 FINAL SOS TRIGGERED - NO MORE CANCELLATION: $gesture")
+            Log.d("MainActivity", " FINAL SOS TRIGGERED - NO MORE CANCELLATION: $gesture")
             
             // Clear all notifications
             val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -856,20 +856,20 @@ class MainActivity :
             triggerFullSOSSequence(gesture)
             
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error in final SOS: ${e.message}")
+            Log.e("MainActivity", " Error in final SOS: ${e.message}")
         }
     }
 
     private fun triggerFullSOSSequence(gesture: String) {
-        Log.d("MainActivity", "🚨 FULL SOS TRIGGERED by gesture: $gesture")
+        Log.d("MainActivity", " FULL SOS TRIGGERED by gesture: $gesture")
 
         // 1. IMMEDIATELY START EMERGENCY RECORDING
         val timestamp = System.currentTimeMillis()
         startEmergencyRecording(gesture, timestamp)
-        Log.d("MainActivity", "🎥 Emergency recording started for: $gesture")
+        Log.d("MainActivity", "� Emergency recording started for: $gesture")
 
         // 2. Get emergency contacts from Firebase and send SMS
-        sendEmergencySMSToContacts(gesture, "🚨 EMERGENCY! Gesture detected: $gesture. I need immediate help! Emergency recording started. - Sent by Raksha Safety App")
+        sendEmergencySMSToContacts(gesture, " EMERGENCY! Gesture detected: $gesture. I need immediate help! Emergency recording started. - Sent by Raksha Safety App")
 
         // 3. Start live location sharing
         startLocationSharing(gesture)
@@ -877,7 +877,7 @@ class MainActivity :
         // 4. Show emergency notification with cancel option
         showEmergencyActiveNotification(gesture)
 
-        Log.d("MainActivity", "✅ Full SOS sequence activated: Recording + SMS + Location + Notification")
+        Log.d("MainActivity", " Full SOS sequence activated: Recording + SMS + Location + Notification")
     }
 
     private fun showEmergencyActiveNotification(gesture: String) {
@@ -895,7 +895,7 @@ class MainActivity :
             )
 
             val notification = NotificationCompat.Builder(this, "RAKSHA_SOS_CHANNEL")
-                .setContentTitle("🚨 EMERGENCY ACTIVE!")
+                .setContentTitle(" EMERGENCY ACTIVE!")
                 .setContentText("Recording in progress. Tap to access Secure Vault.")
                 .setSmallIcon(android.R.drawable.ic_dialog_alert)
                 .setPriority(NotificationCompat.PRIORITY_MAX)
@@ -909,18 +909,18 @@ class MainActivity :
 
             notificationManager.notify(1002, notification)
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error showing emergency notification: ${e.message}")
+            Log.e("MainActivity", " Error showing emergency notification: ${e.message}")
         }
     }
 
     // MediaPipe gesture recognition methods - FIXED AND ENABLED
     private fun initializeMediaPipeGestures() {
         try {
-            Log.d("MainActivity", "🚀 Initializing REAL MediaPipe gesture recognition...")
+            Log.d("MainActivity", " Initializing REAL MediaPipe gesture recognition...")
             
             // Initialize gesture helper with retry logic
             if (gestureHelper == null) {
-                Log.d("MainActivity", "🔄 Creating new GestureRecognizerHelper...")
+                Log.d("MainActivity", " Creating new GestureRecognizerHelper...")
                 gestureHelper = GestureRecognizerHelper(
                     minHandDetectionConfidence = 0.3f,
                     minHandTrackingConfidence = 0.3f,
@@ -936,7 +936,7 @@ class MainActivity :
                 
                 // Verify initialization
                 if (!gestureHelper!!.isInitialized()) {
-                    Log.w("MainActivity", "⚠️ First initialization failed, retrying...")
+                    Log.w("MainActivity", " First initialization failed, retrying...")
                     gestureHelper?.clearGestureRecognizer()
                     gestureHelper = GestureRecognizerHelper(
                         minHandDetectionConfidence = 0.3f,
@@ -953,9 +953,9 @@ class MainActivity :
             // DISABLED: Native camera conflicts with Flutter camera
             // startCameraForGestureDetection()
 
-            Log.d("MainActivity", "✅ MediaPipe gesture detection initialized (NO native camera)")
+            Log.d("MainActivity", " MediaPipe gesture detection initialized (NO native camera)")
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Failed to initialize MediaPipe gesture detection: ${e.message}")
+            Log.e("MainActivity", " Failed to initialize MediaPipe gesture detection: ${e.message}")
             e.printStackTrace()
         }
     }
@@ -971,7 +971,7 @@ class MainActivity :
                     val gestureName = gesture.categoryName()
                     val confidence = gesture.score()
                     
-                    Log.d("MainActivity", "🎯 REAL Gesture detected: $gestureName (${(confidence * 100).toInt()}%)")
+                    Log.d("MainActivity", " REAL Gesture detected: $gestureName (${(confidence * 100).toInt()}%)")
 
                     // Store result for Flutter to read
                     latestGestureResult = mapOf(
@@ -984,13 +984,13 @@ class MainActivity :
                     val isEmergencyGesture = checkIfEmergencyGesture(gestureName, confidence)
                     
                     if (isEmergencyGesture && !isTestMode) {
-                        Log.d("MainActivity", "🚨 EMERGENCY GESTURE DETECTED - Launching full-screen popup!")
+                        Log.d("MainActivity", " EMERGENCY GESTURE DETECTED - Launching full-screen popup!")
                         launchFullScreenCountdown(gestureName)
                     }
 
                     // If test mode is active, send test alert
                     if (isTestMode) {
-                        Log.d("MainActivity", "🧪 Test mode active - sending test alert for gesture: $gestureName")
+                        Log.d("MainActivity", " Test mode active - sending test alert for gesture: $gestureName")
                         sendTestAlert()
                         isTestMode = false // Reset test mode
                     }
@@ -998,7 +998,7 @@ class MainActivity :
                     // Send gesture result back to Flutter immediately - FIXED
                     runOnUiThread {
                         try {
-                            Log.d("MainActivity", "📤 Sending gesture to Flutter: $gestureName")
+                            Log.d("MainActivity", "� Sending gesture to Flutter: $gestureName")
                             val channel = MethodChannel(flutterEngine?.dartExecutor?.binaryMessenger!!, GESTURE_CHANNEL)
                             channel.invokeMethod(
                                 "onGestureDetected",
@@ -1008,9 +1008,9 @@ class MainActivity :
                                     "isTestMode" to isTestMode
                                 )
                             )
-                            Log.d("MainActivity", "✅ Gesture sent to Flutter successfully")
+                            Log.d("MainActivity", " Gesture sent to Flutter successfully")
                         } catch (e: Exception) {
-                            Log.e("MainActivity", "❌ FAILED to send gesture to Flutter: ${e.message}")
+                            Log.e("MainActivity", " FAILED to send gesture to Flutter: ${e.message}")
                             e.printStackTrace()
                         }
                     }
@@ -1020,14 +1020,14 @@ class MainActivity :
     }
 
     override fun onError(error: String, errorCode: Int) {
-        Log.e("MainActivity", "❌ Gesture recognition error: $error (code: $errorCode)")
+        Log.e("MainActivity", " Gesture recognition error: $error (code: $errorCode)")
     }
 
     private var isTestMode = false
 
     private fun enableTestMode() {
         isTestMode = true
-        Log.d("MainActivity", "🧪 Test mode enabled - next gesture detection will send test alert")
+        Log.d("MainActivity", " Test mode enabled - next gesture detection will send test alert")
     }
 
     private fun checkIfEmergencyGesture(gestureName: String, confidence: Float): Boolean {
@@ -1058,11 +1058,11 @@ class MainActivity :
                     if (gestures != null) {
                         userSelectedGestures.clear()
                         gestures.filterIsInstance<String>().forEach { userSelectedGestures.add(it) }
-                        Log.d("MainActivity", "✅ Loaded user gestures: $userSelectedGestures")
+                        Log.d("MainActivity", " Loaded user gestures: $userSelectedGestures")
                     } else {
                         // Default: all gestures trigger SOS
                         userSelectedGestures.addAll(listOf("Victory", "Thumb_Up", "Thumb_Down", "Closed_Fist"))
-                        Log.d("MainActivity", "⚠️ No gestures saved — using all as default")
+                        Log.d("MainActivity", " No gestures saved — using all as default")
                     }
                 }
                 .addOnFailureListener {
@@ -1075,7 +1075,7 @@ class MainActivity :
 
     private fun launchFullScreenCountdown(gestureName: String) {
         try {
-            Log.d("MainActivity", "🚀 Starting SOS notification countdown for gesture: $gestureName")
+            Log.d("MainActivity", " Starting SOS notification countdown for gesture: $gestureName")
             
             // Start notification service for 10-second countdown
             val intent = Intent(this, SOSNotificationService::class.java).apply {
@@ -1088,9 +1088,9 @@ class MainActivity :
                 startService(intent)
             }
             
-            Log.d("MainActivity", "✅ SOS notification service started")
+            Log.d("MainActivity", " SOS notification service started")
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error launching countdown: ${e.message}")
+            Log.e("MainActivity", " Error launching countdown: ${e.message}")
             e.printStackTrace()
         }
     }
@@ -1098,7 +1098,7 @@ class MainActivity :
     // Start voice detection — delegates entirely to RakshaForegroundService
     private fun startVoiceDetection(triggers: List<String>) {
         voiceTriggers = triggers
-        Log.d("MainActivity", "🎤 Starting voice detection with ${triggers.size} triggers: $triggers")
+        Log.d("MainActivity", " Starting voice detection with ${triggers.size} triggers: $triggers")
 
         // Start/update the foreground service with triggers
         val serviceIntent = Intent(this, RakshaForegroundService::class.java).apply {
@@ -1106,7 +1106,7 @@ class MainActivity :
             putStringArrayListExtra(RakshaForegroundService.EXTRA_TRIGGERS, ArrayList(triggers))
         }
         startForegroundService(serviceIntent)
-        Log.d("MainActivity", "✅ RakshaForegroundService started with triggers")
+        Log.d("MainActivity", " RakshaForegroundService started with triggers")
     }
 
     // Stop voice detection
@@ -1120,11 +1120,11 @@ class MainActivity :
         try {
             val intent = Intent("com.example.raksha.STOP_VOICE_LISTENER")
             sendBroadcast(intent)
-            Log.d("MainActivity", "🛑 Sent stop broadcast to voice listener")
+            Log.d("MainActivity", " Sent stop broadcast to voice listener")
         } catch (e: Exception) {
             Log.e("MainActivity", "Error stopping voice listener: ${e.message}")
         }
-        Log.d("MainActivity", "🛑 Voice detection stopped")
+        Log.d("MainActivity", " Voice detection stopped")
     }
 
     // Start listening for speech
@@ -1144,16 +1144,16 @@ class MainActivity :
 
         isListeningForVoice = true
         speechRecognizer?.startListening(intent)
-        Log.d("MainActivity", "🎤 Started listening for voice...")
+        Log.d("MainActivity", " Started listening for voice...")
     }
 
     // RecognitionListener implementation
     override fun onReadyForSpeech(params: Bundle?) {
-        Log.d("MainActivity", "🎤 Ready for speech")
+        Log.d("MainActivity", " Ready for speech")
     }
 
     override fun onBeginningOfSpeech() {
-        Log.d("MainActivity", "🎤 Speech started")
+        Log.d("MainActivity", " Speech started")
     }
 
     override fun onRmsChanged(rmsdB: Float) {
@@ -1165,11 +1165,11 @@ class MainActivity :
     }
 
     override fun onEndOfSpeech() {
-        Log.d("MainActivity", "🎤 Speech ended")
+        Log.d("MainActivity", " Speech ended")
     }
 
     override fun onError(error: Int) {
-        Log.e("MainActivity", "🎤 Speech error: $error")
+        Log.e("MainActivity", " Speech error: $error")
         // Restart listening after error
         android.os.Handler()
                 .postDelayed(
@@ -1186,13 +1186,13 @@ class MainActivity :
         val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
         if (matches != null && matches.isNotEmpty()) {
             val spokenText = matches[0].lowercase()
-            Log.d("MainActivity", "🎤 HEARD: '$spokenText' | Checking against triggers: $voiceTriggers")
+            Log.d("MainActivity", " HEARD: '$spokenText' | Checking against triggers: $voiceTriggers")
 
             // Check for trigger words with more flexible matching
             for (trigger in voiceTriggers) {
                 val triggerLower = trigger.lowercase()
                 if (spokenText.contains(triggerLower)) {
-                    Log.d("MainActivity", "🚨 VOICE TRIGGER DETECTED: '$trigger' in '$spokenText'")
+                    Log.d("MainActivity", " VOICE TRIGGER DETECTED: '$trigger' in '$spokenText'")
                     onVoiceTriggerDetected(trigger)
                     return // Stop checking other triggers
                 }
@@ -1202,15 +1202,15 @@ class MainActivity :
             val emergencyWords = listOf("help", "emergency", "police", "danger", "rescue", "sos")
             for (word in emergencyWords) {
                 if (spokenText.contains(word)) {
-                    Log.d("MainActivity", "🚨 EMERGENCY WORD DETECTED: '$word' in '$spokenText'")
+                    Log.d("MainActivity", " EMERGENCY WORD DETECTED: '$word' in '$spokenText'")
                     onVoiceTriggerDetected(word)
                     return
                 }
             }
             
-            Log.d("MainActivity", "🔍 No triggers found in: '$spokenText'")
+            Log.d("MainActivity", "� No triggers found in: '$spokenText'")
         } else {
-            Log.d("MainActivity", "🎤 No speech results received")
+            Log.d("MainActivity", " No speech results received")
         }
 
         // Restart listening
@@ -1229,12 +1229,12 @@ class MainActivity :
         val matches = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
         if (matches != null && matches.isNotEmpty()) {
             val spokenText = matches[0].lowercase()
-            Log.d("MainActivity", "🎤 Partial: '$spokenText'")
+            Log.d("MainActivity", " Partial: '$spokenText'")
 
             // Check for trigger words in partial results too
             for (trigger in voiceTriggers) {
                 if (spokenText.contains(trigger.lowercase())) {
-                    Log.d("MainActivity", "🚨 VOICE TRIGGER DETECTED (partial): $trigger")
+                    Log.d("MainActivity", " VOICE TRIGGER DETECTED (partial): $trigger")
                     onVoiceTriggerDetected(trigger)
                     break
                 }
@@ -1248,7 +1248,7 @@ class MainActivity :
 
     // Handle voice trigger detection - ENHANCED TO TRIGGER SOS
     private fun onVoiceTriggerDetected(trigger: String) {
-        Log.d("MainActivity", "🚨 VOICE TRIGGER DETECTED: $trigger - TRIGGERING SOS!")
+        Log.d("MainActivity", " VOICE TRIGGER DETECTED: $trigger - TRIGGERING SOS!")
 
         // Show immediate notification that trigger was detected
         showVoiceTriggerDetectedNotification(trigger)
@@ -1303,7 +1303,7 @@ class MainActivity :
             }
             
             val notification = NotificationCompat.Builder(this, "VOICE_TRIGGER_CHANNEL")
-                .setContentTitle("🎤 VOICE TRIGGER DETECTED!")
+                .setContentTitle(" VOICE TRIGGER DETECTED!")
                 .setContentText("Detected: \"$trigger\" - Emergency SOS activated")
                 .setSmallIcon(android.R.drawable.ic_btn_speak_now)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -1314,15 +1314,15 @@ class MainActivity :
             
             notificationManager.notify(2001, notification)
             
-            Log.d("MainActivity", "✅ Voice trigger notification shown for: $trigger")
+            Log.d("MainActivity", " Voice trigger notification shown for: $trigger")
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error showing voice trigger notification: ${e.message}")
+            Log.e("MainActivity", " Error showing voice trigger notification: ${e.message}")
         }
     }
 
     // Force start MediaPipe detection with aggressive settings
     private fun forceStartMediaPipeDetection() {
-        Log.d("MainActivity", "🔥 FORCE STARTING MEDIAPIPE DETECTION")
+        Log.d("MainActivity", " FORCE STARTING MEDIAPIPE DETECTION")
 
         try {
             // Initialize MediaPipe if not already done
@@ -1341,15 +1341,15 @@ class MainActivity :
             // DISABLED: Native camera conflicts with Flutter camera
             // startCameraForGestureDetection()
 
-            Log.d("MainActivity", "✅ MediaPipe detection FORCE STARTED (NO native camera)")
+            Log.d("MainActivity", " MediaPipe detection FORCE STARTED (NO native camera)")
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Failed to force start MediaPipe: ${e.message}")
+            Log.e("MainActivity", " Failed to force start MediaPipe: ${e.message}")
         }
     }
 
     // Start REAL background service for cross-app detection
     private fun startRealBackgroundService(gestures: List<String>) {
-        Log.d("MainActivity", "🚀 Starting REAL background service")
+        Log.d("MainActivity", " Starting REAL background service")
 
         try {
             // Start the foreground service
@@ -1360,16 +1360,16 @@ class MainActivity :
                     }
             startForegroundService(intent)
 
-            Log.d("MainActivity", "✅ Real background service started")
+            Log.d("MainActivity", " Real background service started")
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Failed to start real background service: ${e.message}")
+            Log.e("MainActivity", " Failed to start real background service: ${e.message}")
         }
     }
 
     // Start AccessibilityService for system-wide gesture detection
     private fun startAccessibilityService() {
         try {
-            Log.d("MainActivity", "🚀 Starting Accessibility Service for system-wide detection")
+            Log.d("MainActivity", " Starting Accessibility Service for system-wide detection")
             
             // Check if accessibility service is enabled
             val accessibilityEnabled = Settings.Secure.getString(
@@ -1380,21 +1380,21 @@ class MainActivity :
             val serviceName = "com.example.raksha/.RakshaAccessibilityService"
             
             if (accessibilityEnabled?.contains(serviceName) == true) {
-                Log.d("MainActivity", "✅ Accessibility service already enabled")
+                Log.d("MainActivity", " Accessibility service already enabled")
             } else {
-                Log.d("MainActivity", "⚠️ Accessibility service not enabled - opening settings")
+                Log.d("MainActivity", " Accessibility service not enabled - opening settings")
                 openAccessibilitySettings()
             }
             
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error starting accessibility service: ${e.message}")
+            Log.e("MainActivity", " Error starting accessibility service: ${e.message}")
         }
     }
     
     // Enable complete system-wide detection
     private fun enableSystemWideDetection() {
         try {
-            Log.d("MainActivity", "🚀 Enabling COMPLETE system-wide detection...")
+            Log.d("MainActivity", " Enabling COMPLETE system-wide detection...")
             
             // 1. Request battery optimization exemption
             requestBatteryOptimizationExemption()
@@ -1412,10 +1412,10 @@ class MainActivity :
             }
             startForegroundService(intent)
             
-            Log.d("MainActivity", "✅ System-wide detection setup initiated")
+            Log.d("MainActivity", " System-wide detection setup initiated")
             
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error enabling system-wide detection: ${e.message}")
+            Log.e("MainActivity", " Error enabling system-wide detection: ${e.message}")
         }
     }
     
@@ -1427,11 +1427,11 @@ class MainActivity :
                     intent.data = android.net.Uri.parse("package:$packageName")
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                     startActivity(intent)
-                    Log.d("MainActivity", "✅ Requested overlay permission")
+                    Log.d("MainActivity", " Requested overlay permission")
                 }
             }
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Failed to request overlay permission: ${e.message}")
+            Log.e("MainActivity", " Failed to request overlay permission: ${e.message}")
         }
     }
 
@@ -1441,9 +1441,9 @@ class MainActivity :
             val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
             startActivity(intent)
-            Log.d("MainActivity", "✅ Opened accessibility settings")
+            Log.d("MainActivity", " Opened accessibility settings")
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Failed to open accessibility settings: ${e.message}")
+            Log.e("MainActivity", " Failed to open accessibility settings: ${e.message}")
         }
     }
 
@@ -1454,16 +1454,16 @@ class MainActivity :
             intent.data = android.net.Uri.parse("package:$packageName")
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
             startActivity(intent)
-            Log.d("MainActivity", "✅ Opened overlay settings")
+            Log.d("MainActivity", " Opened overlay settings")
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Failed to open overlay settings: ${e.message}")
+            Log.e("MainActivity", " Failed to open overlay settings: ${e.message}")
         }
     }
     
     // Play recording from secure vault
     private fun playRecording(audioPath: String?, videoPath: String?, gesture: String) {
         try {
-            Log.d("MainActivity", "🎵 ========== PLAYING RECORDING ==========")
+            Log.d("MainActivity", "� ========== PLAYING RECORDING ==========")
             Log.d("MainActivity", "Audio: $audioPath")
             Log.d("MainActivity", "Video: $videoPath")
             
@@ -1479,14 +1479,14 @@ class MainActivity :
                 videoFile?.exists() == true -> videoFile
                 audioFile?.exists() == true -> audioFile
                 else -> {
-                    Log.e("MainActivity", "❌ No valid files found")
-                    android.widget.Toast.makeText(this, "❌ Recording file not found", android.widget.Toast.LENGTH_LONG).show()
+                    Log.e("MainActivity", " No valid files found")
+                    android.widget.Toast.makeText(this, " Recording file not found", android.widget.Toast.LENGTH_LONG).show()
                     return
                 }
             }
             
-            Log.d("MainActivity", "📂 Playing file: ${fileToPlay.absolutePath}")
-            Log.d("MainActivity", "📂 File size: ${fileToPlay.length()} bytes")
+            Log.d("MainActivity", "� Playing file: ${fileToPlay.absolutePath}")
+            Log.d("MainActivity", "� File size: ${fileToPlay.length()} bytes")
             
             // Create URI using FileProvider
             val fileUri = androidx.core.content.FileProvider.getUriForFile(
@@ -1495,7 +1495,7 @@ class MainActivity :
                 fileToPlay
             )
             
-            Log.d("MainActivity", "📂 File URI: $fileUri")
+            Log.d("MainActivity", "� File URI: $fileUri")
             
             // Create intent to open with system media player
             val intent = Intent(Intent.ACTION_VIEW).apply {
@@ -1507,23 +1507,23 @@ class MainActivity :
             // Check if there's an app that can handle this
             if (intent.resolveActivity(packageManager) != null) {
                 startActivity(Intent.createChooser(intent, "Play Recording"))
-                Log.d("MainActivity", "✅ Media player launched")
+                Log.d("MainActivity", " Media player launched")
             } else {
-                Log.e("MainActivity", "❌ No app found to play media")
-                android.widget.Toast.makeText(this, "❌ No media player app found", android.widget.Toast.LENGTH_LONG).show()
+                Log.e("MainActivity", " No app found to play media")
+                android.widget.Toast.makeText(this, " No media player app found", android.widget.Toast.LENGTH_LONG).show()
             }
             
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error playing recording: ${e.message}")
+            Log.e("MainActivity", " Error playing recording: ${e.message}")
             e.printStackTrace()
-            android.widget.Toast.makeText(this, "❌ Error: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
+            android.widget.Toast.makeText(this, " Error: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
         }
     }
     
     // Play recording using PlaybackActivity
     private fun playRecordingWithActivity(audioPath: String?, videoPath: String?, gesture: String) {
         try {
-            Log.d("MainActivity", "🎵 Launching PlaybackActivity")
+            Log.d("MainActivity", "� Launching PlaybackActivity")
             
             val intent = Intent(this, PlaybackActivity::class.java).apply {
                 putExtra("audioPath", audioPath)
@@ -1533,38 +1533,38 @@ class MainActivity :
             }
             
             startActivity(intent)
-            Log.d("MainActivity", "✅ PlaybackActivity launched")
+            Log.d("MainActivity", " PlaybackActivity launched")
             
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error launching PlaybackActivity: ${e.message}")
+            Log.e("MainActivity", " Error launching PlaybackActivity: ${e.message}")
             e.printStackTrace()
-            android.widget.Toast.makeText(this, "❌ Error: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
+            android.widget.Toast.makeText(this, " Error: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
         }
     }
     
     // Simple playback by copying file to Downloads and showing path
     private fun playRecordingSimple(audioPath: String?, videoPath: String?, gesture: String) {
         try {
-            Log.d("MainActivity", "🎵 ========== SIMPLE PLAYBACK ==========")
+            Log.d("MainActivity", "� ========== SIMPLE PLAYBACK ==========")
             
             // Choose file to play (prefer audio)
             val sourceFile = when {
                 audioPath != null && java.io.File(audioPath).exists() -> java.io.File(audioPath)
                 videoPath != null && java.io.File(videoPath).exists() -> java.io.File(videoPath)
                 else -> {
-                    Log.e("MainActivity", "❌ No valid files")
-                    android.widget.Toast.makeText(this, "❌ No recording files found", android.widget.Toast.LENGTH_LONG).show()
+                    Log.e("MainActivity", " No valid files")
+                    android.widget.Toast.makeText(this, " No recording files found", android.widget.Toast.LENGTH_LONG).show()
                     return
                 }
             }
             
-            Log.d("MainActivity", "📂 Source: ${sourceFile.absolutePath}")
-            Log.d("MainActivity", "📂 Size: ${sourceFile.length()} bytes (${sourceFile.length() / 1024}KB)")
+            Log.d("MainActivity", "� Source: ${sourceFile.absolutePath}")
+            Log.d("MainActivity", "� Size: ${sourceFile.length()} bytes (${sourceFile.length() / 1024}KB)")
             
             if (sourceFile.length() == 0L) {
                 android.widget.Toast.makeText(
                     this, 
-                    "❌ File is empty (0 bytes)\n\nRecording failed!", 
+                    " File is empty (0 bytes)\n\nRecording failed!", 
                     android.widget.Toast.LENGTH_LONG
                 ).show()
                 return
@@ -1574,15 +1574,15 @@ class MainActivity :
             val downloadsDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
             val publicFile = java.io.File(downloadsDir, "Raksha_Emergency_${System.currentTimeMillis()}.${sourceFile.extension}")
             
-            Log.d("MainActivity", "📂 Copying to Downloads: ${publicFile.absolutePath}")
+            Log.d("MainActivity", "� Copying to Downloads: ${publicFile.absolutePath}")
             sourceFile.copyTo(publicFile, overwrite = true)
             
-            Log.d("MainActivity", "✅ Copied ${publicFile.length()} bytes")
+            Log.d("MainActivity", " Copied ${publicFile.length()} bytes")
             
             // Show success message with file location
             android.widget.Toast.makeText(
                 this,
-                "✅ Recording saved to Downloads!\n\n" +
+                " Recording saved to Downloads!\n\n" +
                 "File: ${publicFile.name}\n" +
                 "Size: ${publicFile.length() / 1024}KB\n\n" +
                 "Open it from your Downloads folder with any music/video player app!",
@@ -1600,7 +1600,7 @@ class MainActivity :
                 // Try to start activity
                 if (intent.resolveActivity(packageManager) != null) {
                     startActivity(Intent.createChooser(intent, "Play with..."))
-                    Log.d("MainActivity", "✅ Opened chooser")
+                    Log.d("MainActivity", " Opened chooser")
                 } else {
                     Log.d("MainActivity", "No app to open, but file saved to Downloads")
                 }
@@ -1610,9 +1610,9 @@ class MainActivity :
             }
             
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error: ${e.message}")
+            Log.e("MainActivity", " Error: ${e.message}")
             e.printStackTrace()
-            android.widget.Toast.makeText(this, "❌ Error: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
+            android.widget.Toast.makeText(this, " Error: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
         }
     }
 
@@ -1634,7 +1634,7 @@ class MainActivity :
 
     // RESTORED - Full camera method for gesture detection
     private fun startCameraForGestureDetection() {
-        Log.d("MainActivity", "🎥 Starting camera for REAL MediaPipe gesture detection...")
+        Log.d("MainActivity", "� Starting camera for REAL MediaPipe gesture detection...")
         
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
         cameraProviderFuture.addListener({
@@ -1661,9 +1661,9 @@ class MainActivity :
 
                 cameraProvider?.unbindAll()
                 cameraProvider?.bindToLifecycle(this, cameraSelector, imageAnalysis)
-                Log.d("MainActivity", "✅ Camera started for gesture detection")
+                Log.d("MainActivity", " Camera started for gesture detection")
             } catch (e: Exception) {
-                Log.e("MainActivity", "❌ Camera setup failed: ${e.message}")
+                Log.e("MainActivity", " Camera setup failed: ${e.message}")
             }
         }, ContextCompat.getMainExecutor(this))
     }
@@ -1671,22 +1671,22 @@ class MainActivity :
     // Process ImageProxy through MediaPipe - RESTORED
     private fun processImageProxy(imageProxy: ImageProxy) {
         try {
-            Log.d("MainActivity", "🎯 Processing frame through MediaPipe...")
+            Log.d("MainActivity", " Processing frame through MediaPipe...")
             val bitmap = imageProxyToBitmap(imageProxy)
             
             if (bitmap != null && gestureHelper != null) {
-                Log.d("MainActivity", "📷 Bitmap created: ${bitmap.width}x${bitmap.height}")
+                Log.d("MainActivity", "� Bitmap created: ${bitmap.width}x${bitmap.height}")
                 val result = gestureHelper?.recognizeImage(bitmap)
                 if (result != null) {
-                    Log.d("MainActivity", "📊 MediaPipe result received")
+                    Log.d("MainActivity", "� MediaPipe result received")
                 } else {
-                    Log.w("MainActivity", "❌ MediaPipe returned null result")
+                    Log.w("MainActivity", " MediaPipe returned null result")
                 }
             } else {
-                Log.e("MainActivity", "❌ Failed to create bitmap from ImageProxy")
+                Log.e("MainActivity", " Failed to create bitmap from ImageProxy")
             }
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error processing image: ${e.message}")
+            Log.e("MainActivity", " Error processing image: ${e.message}")
         } finally {
             imageProxy.close()
             isProcessingFrame = false
@@ -1696,7 +1696,7 @@ class MainActivity :
     // Convert ImageProxy to Bitmap - RESTORED
     private fun imageProxyToBitmap(imageProxy: ImageProxy): Bitmap? {
         return try {
-            Log.d("MainActivity", "🔄 Converting ImageProxy to Bitmap - Format: ${imageProxy.format}")
+            Log.d("MainActivity", " Converting ImageProxy to Bitmap - Format: ${imageProxy.format}")
             val buffer = imageProxy.planes[0].buffer
             val bytes = ByteArray(buffer.remaining())
             buffer.get(bytes)
@@ -1714,10 +1714,10 @@ class MainActivity :
             
             val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
             bitmap.setPixels(pixels, 0, width, 0, 0, width, height)
-            Log.d("MainActivity", "✅ Bitmap created successfully: ${bitmap.width}x${bitmap.height}")
+            Log.d("MainActivity", " Bitmap created successfully: ${bitmap.width}x${bitmap.height}")
             bitmap
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error converting ImageProxy to Bitmap: ${e.message}")
+            Log.e("MainActivity", " Error converting ImageProxy to Bitmap: ${e.message}")
             null
         }
     }
@@ -1740,13 +1740,13 @@ class MainActivity :
             //     startCameraForGestureDetection()
             // }
 
-            Log.d("MainActivity", "🎯 REAL MediaPipe gesture detection active")
+            Log.d("MainActivity", " REAL MediaPipe gesture detection active")
             result.success(mapOf(
                 "status" to "active",
                 "message" to "Real MediaPipe processing camera frames"
             ))
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error processing frame: ${e.message}")
+            Log.e("MainActivity", " Error processing frame: ${e.message}")
             result.success(mapOf("error" to e.message))
         }
     }
@@ -1754,7 +1754,7 @@ class MainActivity :
     // Test MediaPipe with a simple colored bitmap
     private fun testMediaPipeWithSampleImage(result: MethodChannel.Result) {
         try {
-            Log.d("MainActivity", "🧪 Testing MediaPipe with sample image")
+            Log.d("MainActivity", " Testing MediaPipe with sample image")
             
             if (gestureHelper == null) {
                 result.error("NO_HELPER", "GestureHelper not initialized", null)
@@ -1765,20 +1765,20 @@ class MainActivity :
             val testBitmap = Bitmap.createBitmap(640, 480, Bitmap.Config.ARGB_8888)
             testBitmap.eraseColor(android.graphics.Color.BLUE)
             
-            Log.d("MainActivity", "🎨 Created test bitmap: ${testBitmap.width}x${testBitmap.height}")
+            Log.d("MainActivity", "� Created test bitmap: ${testBitmap.width}x${testBitmap.height}")
             
             // Process through MediaPipe
             val gestureResult = gestureHelper?.recognizeImage(testBitmap)
             
             if (gestureResult != null) {
-                Log.d("MainActivity", "✅ MediaPipe test successful - got result")
+                Log.d("MainActivity", " MediaPipe test successful - got result")
                 result.success(mapOf(
                     "status" to "success",
                     "message" to "MediaPipe is working",
                     "resultCount" to gestureResult.results.size
                 ))
             } else {
-                Log.w("MainActivity", "⚠️ MediaPipe test returned null")
+                Log.w("MainActivity", " MediaPipe test returned null")
                 result.success(mapOf(
                     "status" to "null_result",
                     "message" to "MediaPipe returned null result"
@@ -1786,7 +1786,7 @@ class MainActivity :
             }
             
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ MediaPipe test failed: ${e.message}")
+            Log.e("MainActivity", " MediaPipe test failed: ${e.message}")
             e.printStackTrace()
             result.error("TEST_FAILED", e.message, null)
         }
@@ -1798,14 +1798,14 @@ class MainActivity :
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
                 if (checkSelfPermission(android.Manifest.permission.CAMERA) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
                     requestPermissions(arrayOf(android.Manifest.permission.CAMERA), 100)
-                    Log.d("MainActivity", "📷 Camera permission requested")
+                    Log.d("MainActivity", "� Camera permission requested")
                 } else {
-                    Log.d("MainActivity", "✅ Camera permission already granted")
+                    Log.d("MainActivity", " Camera permission already granted")
                 }
             }
             result.success("Camera permission handled")
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error requesting camera permission: ${e.message}")
+            Log.e("MainActivity", " Error requesting camera permission: ${e.message}")
             result.error("PERMISSION_ERROR", e.message, null)
         }
     }
@@ -1813,14 +1813,14 @@ class MainActivity :
     // Test simple gesture detection without MediaPipe
     private fun testSimpleGestureDetection(result: MethodChannel.Result) {
         try {
-            Log.d("MainActivity", "🧪 Testing simple gesture detection (no MediaPipe)")
+            Log.d("MainActivity", " Testing simple gesture detection (no MediaPipe)")
             
             // Simulate gesture detection for testing
             val testGestures = listOf("Thumb_Up", "Thumb_Down", "Victory", "Closed_Fist")
             val randomGesture = testGestures.shuffled().first()
             val randomConfidence = 0.8
             
-            Log.d("MainActivity", "🎯 Simulated gesture: $randomGesture (${(randomConfidence * 100).toInt()}%)")
+            Log.d("MainActivity", " Simulated gesture: $randomGesture (${(randomConfidence * 100).toInt()}%)")
             
             result.success(mapOf(
                 "status" to "success",
@@ -1830,7 +1830,7 @@ class MainActivity :
             ))
             
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Simple gesture test failed: ${e.message}")
+            Log.e("MainActivity", " Simple gesture test failed: ${e.message}")
             result.error("TEST_FAILED", e.message, null)
         }
     }
@@ -1842,15 +1842,15 @@ class MainActivity :
     // Start native camera processing without takePicture
     private fun startNativeCameraProcessing(result: MethodChannel.Result) {
         try {
-            Log.d("MainActivity", "🎥 Starting native camera processing...")
+            Log.d("MainActivity", "� Starting native camera processing...")
             isNativeProcessingActive = true
             
             // DISABLED - No native camera to prevent Flutter conflicts
-            Log.d("MainActivity", "🚫 Native camera continuous start DISABLED")
+            Log.d("MainActivity", "� Native camera continuous start DISABLED")
             
             result.success("Native camera processing started")
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error starting native processing: ${e.message}")
+            Log.e("MainActivity", " Error starting native processing: ${e.message}")
             result.error("PROCESSING_ERROR", e.message, null)
         }
     }
@@ -1869,7 +1869,7 @@ class MainActivity :
                 ))
             }
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error getting gesture result: ${e.message}")
+            Log.e("MainActivity", " Error getting gesture result: ${e.message}")
             result.error("RESULT_ERROR", e.message, null)
         }
     }
@@ -1877,7 +1877,7 @@ class MainActivity :
     // New methods for improved SOS flow
     private fun startEmergencyVibration(gesture: String) {
         try {
-            Log.d("MainActivity", "🔥 Starting emergency vibration for: $gesture")
+            Log.d("MainActivity", " Starting emergency vibration for: $gesture")
             val vibrator = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
                 val vibratorManager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as android.os.VibratorManager
                 vibratorManager.defaultVibrator
@@ -1896,9 +1896,9 @@ class MainActivity :
                 vibrator.vibrate(pattern, 0)
             }
             
-            Log.d("MainActivity", "✅ Emergency vibration started")
+            Log.d("MainActivity", " Emergency vibration started")
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error starting emergency vibration: ${e.message}")
+            Log.e("MainActivity", " Error starting emergency vibration: ${e.message}")
         }
     }
     
@@ -1913,15 +1913,15 @@ class MainActivity :
             }
             
             vibrator.cancel()
-            Log.d("MainActivity", "🛑 Emergency vibration stopped")
+            Log.d("MainActivity", " Emergency vibration stopped")
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error stopping vibration: ${e.message}")
+            Log.e("MainActivity", " Error stopping vibration: ${e.message}")
         }
     }
     
     private fun showCancellationNotification(gesture: String, duration: Int) {
         try {
-            Log.d("MainActivity", "📱 Showing cancellation notification for: $gesture")
+            Log.d("MainActivity", " Showing cancellation notification for: $gesture")
             
             val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             
@@ -1955,7 +1955,7 @@ class MainActivity :
             // Build notification
             val notification = androidx.core.app.NotificationCompat.Builder(this, "emergency_cancel")
                 .setSmallIcon(android.R.drawable.ic_dialog_alert)
-                .setContentTitle("🚨 EMERGENCY SOS ACTIVE")
+                .setContentTitle(" EMERGENCY SOS ACTIVE")
                 .setContentText("Tap to CANCEL emergency or it will trigger in ${duration/60} minutes")
                 .setPriority(androidx.core.app.NotificationCompat.PRIORITY_HIGH)
                 .setCategory(androidx.core.app.NotificationCompat.CATEGORY_ALARM)
@@ -1971,23 +1971,23 @@ class MainActivity :
                 .build()
             
             notificationManager.notify(999, notification)
-            Log.d("MainActivity", "✅ Cancellation notification shown")
+            Log.d("MainActivity", " Cancellation notification shown")
             
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error showing cancellation notification: ${e.message}")
+            Log.e("MainActivity", " Error showing cancellation notification: ${e.message}")
         }
     }
     
     private fun processImageFileForGesture(imagePath: String, result: MethodChannel.Result) {
         try {
-            Log.d("MainActivity", "🎯 Processing image file for gesture: $imagePath")
+            Log.d("MainActivity", " Processing image file for gesture: $imagePath")
             // Load bitmap from file
             val bitmap = android.graphics.BitmapFactory.decodeFile(imagePath)
             if (bitmap == null) {
                 result.error("INVALID_IMAGE", "Could not load image from path", null)
                 return
             }
-            Log.d("MainActivity", "📷 Image loaded: ${bitmap.width}x${bitmap.height}")
+            Log.d("MainActivity", "� Image loaded: ${bitmap.width}x${bitmap.height}")
             // Process through MediaPipe
             val gestureResult = gestureHelper?.recognizeImage(bitmap)
             if (gestureResult != null && gestureResult.results.isNotEmpty()) {
@@ -1998,7 +1998,7 @@ class MainActivity :
                         val gesture = topGesture[0]
                         val gestureName = gesture.categoryName()
                         val confidence = gesture.score()
-                        Log.d("MainActivity", "✅ GESTURE DETECTED: $gestureName (${(confidence * 100).toInt()}%)")
+                        Log.d("MainActivity", " GESTURE DETECTED: $gestureName (${(confidence * 100).toInt()}%)")
                         result.success(mapOf(
                             "gesture" to gestureName,
                             "confidence" to confidence.toDouble()
@@ -2013,7 +2013,7 @@ class MainActivity :
                 "confidence" to 0.0
             ))
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error processing image for gesture: ${e.message}")
+            Log.e("MainActivity", " Error processing image for gesture: ${e.message}")
             e.printStackTrace()
             result.error("PROCESSING_ERROR", e.message, null)
         }
@@ -2021,7 +2021,7 @@ class MainActivity :
     
     private fun startEmergencyRecording(gesture: String, timestamp: Long) {
         try {
-            Log.d("MainActivity", "🎥 Starting SECURE VAULT emergency recording for gesture: $gesture")
+            Log.d("MainActivity", "� Starting SECURE VAULT emergency recording for gesture: $gesture")
             
             // Create unique recording session ID
             val recordingId = "emergency_${timestamp}_${gesture.replace(" ", "_")}"
@@ -2039,11 +2039,11 @@ class MainActivity :
             saveSecureRecordingSession(recordingId, gesture, timestamp)
             
             // NO auto-stop timer - recording continues until user clicks "I am safe"
-            Log.d("MainActivity", "🔄 Recording will continue until user manually stops it")
+            Log.d("MainActivity", " Recording will continue until user manually stops it")
             
-            Log.d("MainActivity", "✅ SECURE VAULT recording started - ID: $recordingId")
+            Log.d("MainActivity", " SECURE VAULT recording started - ID: $recordingId")
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error starting secure emergency recording: ${e.message}")
+            Log.e("MainActivity", " Error starting secure emergency recording: ${e.message}")
         }
     }
     
@@ -2053,23 +2053,23 @@ class MainActivity :
             val secureVaultDir = java.io.File(filesDir, ".secure_vault")
             if (!secureVaultDir.exists()) {
                 secureVaultDir.mkdirs()
-                Log.d("MainActivity", "📁 Created secure vault directory")
+                Log.d("MainActivity", " Created secure vault directory")
             }
             
             // Create .nomedia file to hide from gallery
             val noMediaFile = java.io.File(secureVaultDir, ".nomedia")
             if (!noMediaFile.exists()) {
                 noMediaFile.createNewFile()
-                Log.d("MainActivity", "🔒 Created .nomedia file for privacy")
+                Log.d("MainActivity", " Created .nomedia file for privacy")
             }
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error creating secure vault: ${e.message}")
+            Log.e("MainActivity", " Error creating secure vault: ${e.message}")
         }
     }
     
     private fun startSecureAudioRecording(recordingId: String, gesture: String, timestamp: Long) {
         try {
-            Log.d("MainActivity", "🎤 Starting SECURE audio recording for emergency")
+            Log.d("MainActivity", " Starting SECURE audio recording for emergency")
             
             // Stop any existing recording
             try {
@@ -2082,7 +2082,7 @@ class MainActivity :
             // Check microphone permission
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
                 if (checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                    Log.e("MainActivity", "❌ Microphone permission not granted!")
+                    Log.e("MainActivity", " Microphone permission not granted!")
                     return
                 }
             }
@@ -2093,7 +2093,7 @@ class MainActivity :
             }
             
             val audioFile = java.io.File(secureVaultDir, "${recordingId}_audio.3gp")
-            Log.d("MainActivity", "🎤 Audio will be saved to: ${audioFile.absolutePath}")
+            Log.d("MainActivity", " Audio will be saved to: ${audioFile.absolutePath}")
             
             // Create audio recorder for secure vault
             val audioRecorder = android.media.MediaRecorder().apply {
@@ -2110,13 +2110,13 @@ class MainActivity :
             currentAudioRecorder = audioRecorder
             currentRecordingId = recordingId
             
-            Log.d("MainActivity", "✅ SECURE audio recording ACTIVE: ${audioFile.name}")
+            Log.d("MainActivity", " SECURE audio recording ACTIVE: ${audioFile.name}")
             
             // Update Firebase immediately to show recording started
             updateRecordingStatus(recordingId, "recording_audio")
             
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error starting secure audio recording: ${e.message}")
+            Log.e("MainActivity", " Error starting secure audio recording: ${e.message}")
             e.printStackTrace()
         }
     }
@@ -2132,17 +2132,17 @@ class MainActivity :
                     .document(recordingId)
                     .update("status", status)
                     .addOnSuccessListener {
-                        Log.d("MainActivity", "✅ Recording status updated: $status")
+                        Log.d("MainActivity", " Recording status updated: $status")
                     }
             }
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error updating recording status: ${e.message}")
+            Log.e("MainActivity", " Error updating recording status: ${e.message}")
         }
     }
     
     private fun startSecureVideoRecording(recordingId: String, gesture: String, timestamp: Long) {
         try {
-            Log.d("MainActivity", "📹 Starting SECURE video recording via StealthRecordingService")
+            Log.d("MainActivity", " Starting SECURE video recording via StealthRecordingService")
             
             // Release Flutter camera first to avoid conflict with Camera2
             cameraProvider?.unbindAll()
@@ -2159,9 +2159,9 @@ class MainActivity :
                 startService(intent)
             }
             
-            Log.d("MainActivity", "✅ SECURE video recording service started")
+            Log.d("MainActivity", " SECURE video recording service started")
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error starting secure video recording: ${e.message}")
+            Log.e("MainActivity", " Error starting secure video recording: ${e.message}")
         }
     }
     
@@ -2194,14 +2194,14 @@ class MainActivity :
                     .document(recordingId)
                     .set(recordingData)
                     .addOnSuccessListener {
-                        Log.d("MainActivity", "✅ Recording session saved to Firebase")
+                        Log.d("MainActivity", " Recording session saved to Firebase")
                     }
                     .addOnFailureListener { e ->
-                        Log.e("MainActivity", "❌ Failed to save recording session: ${e.message}")
+                        Log.e("MainActivity", " Failed to save recording session: ${e.message}")
                     }
             }
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error saving recording session: ${e.message}")
+            Log.e("MainActivity", " Error saving recording session: ${e.message}")
         }
     }
     
@@ -2229,7 +2229,7 @@ class MainActivity :
             )
             
             val notification = NotificationCompat.Builder(this, "RAKSHA_SOS_CHANNEL")
-                .setContentTitle("🚨 EMERGENCY COUNTDOWN: ${countdown}s")
+                .setContentTitle(" EMERGENCY COUNTDOWN: ${countdown}s")
                 .setContentText("$gesture detected! SOS will activate in ${countdown} seconds")
                 .setSmallIcon(android.R.drawable.ic_dialog_alert)
                 .setPriority(NotificationCompat.PRIORITY_MAX)
@@ -2244,7 +2244,7 @@ class MainActivity :
             notificationManager.notify(4001, notification)
             
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error showing SOS countdown notification: ${e.message}")
+            Log.e("MainActivity", " Error showing SOS countdown notification: ${e.message}")
         }
     }
     
@@ -2265,7 +2265,7 @@ class MainActivity :
             )
             
             val notification = NotificationCompat.Builder(this, "RAKSHA_SOS_CHANNEL")
-                .setContentTitle("🚨 7-SECOND VIBRATION PHASE")
+                .setContentTitle(" 7-SECOND VIBRATION PHASE")
                 .setContentText("$message")
                 .setSmallIcon(android.R.drawable.ic_dialog_alert)
                 .setPriority(NotificationCompat.PRIORITY_MAX)
@@ -2280,7 +2280,7 @@ class MainActivity :
             notificationManager.notify(5001, notification)
             
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error showing vibration notification: ${e.message}")
+            Log.e("MainActivity", " Error showing vibration notification: ${e.message}")
         }
     }
     
@@ -2318,7 +2318,7 @@ class MainActivity :
     // Delete secure vault recording
     private fun deleteSecureVaultRecording(recordingId: String, result: MethodChannel.Result) {
         try {
-            Log.d("MainActivity", "🗑️ Deleting secure vault recording: $recordingId")
+            Log.d("MainActivity", "� Deleting secure vault recording: $recordingId")
             
             // Delete local files
             val secureVaultDir = java.io.File(filesDir, ".secure_vault")
@@ -2327,12 +2327,12 @@ class MainActivity :
             
             if (audioFile.exists()) {
                 audioFile.delete()
-                Log.d("MainActivity", "🗑️ Deleted audio file")
+                Log.d("MainActivity", "� Deleted audio file")
             }
             
             if (videoFile.exists()) {
                 videoFile.delete()
-                Log.d("MainActivity", "🗑️ Deleted video file")
+                Log.d("MainActivity", "� Deleted video file")
             }
             
             // Delete Firebase record
@@ -2361,7 +2361,7 @@ class MainActivity :
     
     private fun startStealthAudioRecording(recordingId: String, gesture: String, timestamp: Long) {
         try {
-            Log.d("MainActivity", "🎤 Starting STEALTH audio recording")
+            Log.d("MainActivity", " Starting STEALTH audio recording")
             
             // Create audio recorder in background
             val audioRecorder = android.media.MediaRecorder().apply {
@@ -2381,15 +2381,15 @@ class MainActivity :
             currentAudioRecorder = audioRecorder
             currentRecordingId = recordingId
             
-            Log.d("MainActivity", "✅ Stealth audio recording active")
+            Log.d("MainActivity", " Stealth audio recording active")
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error starting stealth audio recording: ${e.message}")
+            Log.e("MainActivity", " Error starting stealth audio recording: ${e.message}")
         }
     }
     
     private fun startStealthVideoRecording(recordingId: String, gesture: String, timestamp: Long) {
         try {
-            Log.d("MainActivity", "📹 Starting STEALTH video recording from front camera")
+            Log.d("MainActivity", " Starting STEALTH video recording from front camera")
             
             // Start background camera service for stealth recording
             val intent = Intent(this, StealthRecordingService::class.java).apply {
@@ -2405,9 +2405,9 @@ class MainActivity :
                 startService(intent)
             }
             
-            Log.d("MainActivity", "✅ Stealth video recording service started")
+            Log.d("MainActivity", " Stealth video recording service started")
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error starting stealth video recording: ${e.message}")
+            Log.e("MainActivity", " Error starting stealth video recording: ${e.message}")
         }
     }
     
@@ -2435,21 +2435,21 @@ class MainActivity :
                     .document(recordingId)
                     .set(recordingData)
                     .addOnSuccessListener {
-                        Log.d("MainActivity", "✅ Recording session saved to Firebase")
+                        Log.d("MainActivity", " Recording session saved to Firebase")
                     }
                     .addOnFailureListener { e ->
-                        Log.e("MainActivity", "❌ Failed to save recording session: ${e.message}")
+                        Log.e("MainActivity", " Failed to save recording session: ${e.message}")
                     }
             }
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error saving recording session: ${e.message}")
+            Log.e("MainActivity", " Error saving recording session: ${e.message}")
         }
     }
     
     // Stop stealth recording (only called when user clicks "I am safe")
     private fun stopStealthRecording() {
         try {
-            Log.d("MainActivity", "🛑 Stopping stealth recording")
+            Log.d("MainActivity", " Stopping stealth recording")
             
             // Stop audio recording
             try {
@@ -2480,22 +2480,22 @@ class MainActivity :
                             "endTime" to System.currentTimeMillis()
                         ))
                         .addOnSuccessListener {
-                            Log.d("MainActivity", "✅ Recording marked as completed")
+                            Log.d("MainActivity", " Recording marked as completed")
                         }
                 }
                 uploadRecordingsToCloud(currentRecordingId!!)
             }
             
             currentRecordingId = null
-            Log.d("MainActivity", "✅ Stealth recording stopped and uploading to cloud")
+            Log.d("MainActivity", " Stealth recording stopped and uploading to cloud")
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error stopping stealth recording: ${e.message}")
+            Log.e("MainActivity", " Error stopping stealth recording: ${e.message}")
         }
     }
     
     private fun uploadRecordingsToCloud(recordingId: String) {
         try {
-            Log.d("MainActivity", "☁️ Uploading recordings to Firebase Storage")
+            Log.d("MainActivity", "☁ Uploading recordings to Firebase Storage")
             
             val storage = com.google.firebase.storage.FirebaseStorage.getInstance()
             val userId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
@@ -2507,10 +2507,10 @@ class MainActivity :
                     val audioRef = storage.reference.child("emergency_recordings/$userId/$recordingId/audio.3gp")
                     audioRef.putFile(android.net.Uri.fromFile(audioFile))
                         .addOnSuccessListener {
-                            Log.d("MainActivity", "✅ Audio uploaded to cloud")
+                            Log.d("MainActivity", " Audio uploaded to cloud")
                         }
                         .addOnFailureListener { e ->
-                            Log.e("MainActivity", "❌ Audio upload failed: ${e.message}")
+                            Log.e("MainActivity", " Audio upload failed: ${e.message}")
                         }
                 }
                 
@@ -2520,17 +2520,17 @@ class MainActivity :
                     val videoRef = storage.reference.child("emergency_recordings/$userId/$recordingId/video.mp4")
                     videoRef.putFile(android.net.Uri.fromFile(videoFile))
                         .addOnSuccessListener {
-                            Log.d("MainActivity", "✅ Video uploaded to cloud")
+                            Log.d("MainActivity", " Video uploaded to cloud")
                             // Update Firestore with upload completion
                             updateRecordingStatus(recordingId, "uploaded")
                         }
                         .addOnFailureListener { e ->
-                            Log.e("MainActivity", "❌ Video upload failed: ${e.message}")
+                            Log.e("MainActivity", " Video upload failed: ${e.message}")
                         }
                 }
             }
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error uploading recordings: ${e.message}")
+            Log.e("MainActivity", " Error uploading recordings: ${e.message}")
         }
     }
     
@@ -2542,10 +2542,10 @@ class MainActivity :
     
     private fun startLocationSharing(gesture: String) {
         try {
-            Log.d("MainActivity", "📍 Starting CONTINUOUS location sharing for gesture: $gesture")
+            Log.d("MainActivity", " Starting CONTINUOUS location sharing for gesture: $gesture")
             
             if (isLocationSharingActive) {
-                Log.d("MainActivity", "📍 Location sharing already active")
+                Log.d("MainActivity", " Location sharing already active")
                 return
             }
             
@@ -2554,7 +2554,7 @@ class MainActivity :
             // Check location permission
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
                 if (checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                    Log.e("MainActivity", "❌ Location permission not granted for sharing")
+                    Log.e("MainActivity", " Location permission not granted for sharing")
                     return
                 }
             }
@@ -2562,7 +2562,7 @@ class MainActivity :
             // Create location listener for continuous updates
             locationListener = object : android.location.LocationListener {
                 override fun onLocationChanged(location: android.location.Location) {
-                    Log.d("MainActivity", "📍 Location update: ${location.latitude}, ${location.longitude}")
+                    Log.d("MainActivity", " Location update: ${location.latitude}, ${location.longitude}")
                     updateLocationInFirebase(location, gesture)
                     sendLocationUpdateSMS(location)
                 }
@@ -2589,7 +2589,7 @@ class MainActivity :
             )
             
             isLocationSharingActive = true
-            Log.d("MainActivity", "✅ CONTINUOUS location sharing started")
+            Log.d("MainActivity", " CONTINUOUS location sharing started")
             
             // Send initial location
             val lastKnownLocation = locationManager?.getLastKnownLocation(android.location.LocationManager.GPS_PROVIDER)
@@ -2600,7 +2600,7 @@ class MainActivity :
             }
             
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error starting location sharing: ${e.message}")
+            Log.e("MainActivity", " Error starting location sharing: ${e.message}")
         }
     }
     
@@ -2625,14 +2625,14 @@ class MainActivity :
                     .document("current")
                     .set(locationData)
                     .addOnSuccessListener {
-                        Log.d("MainActivity", "✅ Location updated in Firebase")
+                        Log.d("MainActivity", " Location updated in Firebase")
                     }
                     .addOnFailureListener { e ->
-                        Log.e("MainActivity", "❌ Failed to update location: ${e.message}")
+                        Log.e("MainActivity", " Failed to update location: ${e.message}")
                     }
             }
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error updating location in Firebase: ${e.message}")
+            Log.e("MainActivity", " Error updating location in Firebase: ${e.message}")
         }
     }
     
@@ -2643,7 +2643,7 @@ class MainActivity :
         
         if (currentTime - lastSMSTime > 300000) { // 5 minutes
             val userName = getCurrentUserName()
-            val locationMessage = "📍 LIVE LOCATION UPDATE\n\n" +
+            val locationMessage = " LIVE LOCATION UPDATE\n\n" +
                     "$userName's current location:\n" +
                     "https://maps.google.com/?q=${location.latitude},${location.longitude}\n\n" +
                     "Time: ${java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date())}\n" +
@@ -2675,20 +2675,20 @@ class MainActivity :
                                 if (phone != null) {
                                     val smsManager = android.telephony.SmsManager.getDefault()
                                     smsManager.sendTextMessage(phone, null, message, null, null)
-                                    Log.d("MainActivity", "📱 Location SMS sent to: $phone")
+                                    Log.d("MainActivity", " Location SMS sent to: $phone")
                                 }
                             }
                         }
                     }
             }
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error sending location SMS: ${e.message}")
+            Log.e("MainActivity", " Error sending location SMS: ${e.message}")
         }
     }
     
     private fun stopLocationSharing() {
         try {
-            Log.d("MainActivity", "🛑 Stopping CONTINUOUS location sharing")
+            Log.d("MainActivity", " Stopping CONTINUOUS location sharing")
             
             // Stop location updates
             locationListener?.let { listener ->
@@ -2710,68 +2710,68 @@ class MainActivity :
                     .document("current")
                     .update("isActive", false)
                     .addOnSuccessListener {
-                        Log.d("MainActivity", "✅ Location sharing marked as inactive in Firebase")
+                        Log.d("MainActivity", " Location sharing marked as inactive in Firebase")
                     }
             }
             
-            Log.d("MainActivity", "✅ Location sharing stopped successfully")
+            Log.d("MainActivity", " Location sharing stopped successfully")
             
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error stopping location sharing: ${e.message}")
+            Log.e("MainActivity", " Error stopping location sharing: ${e.message}")
         }
     }
     
     private fun sendEmergencySMSToContacts(gesture: String, message: String) {
         try {
-            Log.d("MainActivity", "📱 STARTING emergency SMS for gesture: $gesture")
+            Log.d("MainActivity", " STARTING emergency SMS for gesture: $gesture")
             
             // Get emergency contacts from Firebase
             val userId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
-            Log.d("MainActivity", "📱 User ID: $userId")
+            Log.d("MainActivity", " User ID: $userId")
             
             if (userId != null) {
-                Log.d("MainActivity", "📱 Fetching emergency contacts from Firebase...")
+                Log.d("MainActivity", " Fetching emergency contacts from Firebase...")
                 com.google.firebase.firestore.FirebaseFirestore.getInstance()
                     .collection("users")
                     .document(userId)
                     .get()
                     .addOnSuccessListener { document ->
-                        Log.d("MainActivity", "📱 Firebase document retrieved successfully")
+                        Log.d("MainActivity", " Firebase document retrieved successfully")
                         if (document.exists()) {
-                            Log.d("MainActivity", "📱 Document exists, checking for contacts...")
+                            Log.d("MainActivity", " Document exists, checking for contacts...")
                             val contacts = document.get("emergencyContacts") as? List<Map<String, Any>>
-                            Log.d("MainActivity", "📱 Found contacts: $contacts")
+                            Log.d("MainActivity", " Found contacts: $contacts")
                             
                             if (contacts != null && contacts.isNotEmpty()) {
-                                Log.d("MainActivity", "📱 Processing ${contacts.size} emergency contacts")
+                                Log.d("MainActivity", " Processing ${contacts.size} emergency contacts")
                                 contacts.forEach { contact ->
                                     val phone = contact["phone"] as? String
                                     val name = contact["name"] as? String
-                                    Log.d("MainActivity", "📱 Contact: $name - $phone")
+                                    Log.d("MainActivity", " Contact: $name - $phone")
                                     if (phone != null && phone.isNotEmpty()) {
                                         sendSMSToContact(phone, name ?: "Emergency Contact", message, gesture)
                                     } else {
-                                        Log.w("MainActivity", "⚠️ Skipping contact with empty phone: $contact")
+                                        Log.w("MainActivity", " Skipping contact with empty phone: $contact")
                                     }
                                 }
                             } else {
-                                Log.e("MainActivity", "❌ NO EMERGENCY CONTACTS FOUND! User needs to add contacts first.")
+                                Log.e("MainActivity", " NO EMERGENCY CONTACTS FOUND! User needs to add contacts first.")
                                 // Send a test SMS to verify SMS functionality
                                 sendTestSMS(gesture)
                             }
                         } else {
-                            Log.e("MainActivity", "❌ User document does not exist in Firebase")
+                            Log.e("MainActivity", " User document does not exist in Firebase")
                         }
                     }
                     .addOnFailureListener { e ->
-                        Log.e("MainActivity", "❌ Failed to get emergency contacts: ${e.message}")
+                        Log.e("MainActivity", " Failed to get emergency contacts: ${e.message}")
                         e.printStackTrace()
                     }
             } else {
-                Log.e("MainActivity", "❌ No user ID - user not logged in")
+                Log.e("MainActivity", " No user ID - user not logged in")
             }
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error sending emergency SMS: ${e.message}")
+            Log.e("MainActivity", " Error sending emergency SMS: ${e.message}")
             e.printStackTrace()
         }
     }
@@ -2779,26 +2779,26 @@ class MainActivity :
     // Send test SMS to verify SMS functionality
     private fun sendTestSMS(gesture: String) {
         try {
-            Log.d("MainActivity", "📱 Sending TEST SMS since no contacts found")
+            Log.d("MainActivity", " Sending TEST SMS since no contacts found")
             // You can replace this with your own phone number for testing
             val testPhone = "1234567890" // Replace with your number for testing
             sendSMSToContact(testPhone, "Test Contact", "Test emergency message", gesture)
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Test SMS failed: ${e.message}")
+            Log.e("MainActivity", " Test SMS failed: ${e.message}")
         }
     }
     
     // Test SMS system with specific phone number
     private fun testSMSSystem(phoneNumber: String) {
         try {
-            Log.d("MainActivity", "📱 Testing SMS system with phone: $phoneNumber")
+            Log.d("MainActivity", " Testing SMS system with phone: $phoneNumber")
             
             if (phoneNumber.isEmpty()) {
-                Log.e("MainActivity", "❌ No phone number provided for SMS test")
+                Log.e("MainActivity", " No phone number provided for SMS test")
                 return
             }
             
-            val testMessage = "🧪 TEST SMS from Raksha Safety App\n\n" +
+            val testMessage = " TEST SMS from Raksha Safety App\n\n" +
                     "This is a test message to verify SMS functionality.\n" +
                     "Time: ${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date())}\n\n" +
                     "If you receive this, SMS is working correctly!"
@@ -2806,18 +2806,18 @@ class MainActivity :
             sendSMSToContact(phoneNumber, "Test Contact", testMessage, "TEST")
             
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ SMS test failed: ${e.message}")
+            Log.e("MainActivity", " SMS test failed: ${e.message}")
         }
     }
     
     private fun sendSMSToContact(phone: String, name: String, message: String, gesture: String) {
         try {
-            Log.d("MainActivity", "📱 Attempting to send SMS to $name ($phone)")
+            Log.d("MainActivity", " Attempting to send SMS to $name ($phone)")
             
             // Check SMS permission
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
                 if (checkSelfPermission(android.Manifest.permission.SEND_SMS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                    Log.e("MainActivity", "❌ SMS permission not granted!")
+                    Log.e("MainActivity", " SMS permission not granted!")
                     return
                 }
             }
@@ -2829,20 +2829,20 @@ class MainActivity :
             // Get current location for live sharing
             getCurrentLocationForSMS { location ->
                 val locationText = if (location != null) {
-                    "📍 Live Location: https://maps.google.com/?q=${location.latitude},${location.longitude}"
+                    " Live Location: https://maps.google.com/?q=${location.latitude},${location.longitude}"
                 } else {
-                    "📍 Location: Getting current location..."
+                    " Location: Getting current location..."
                 }
                 
-                val finalMessage = "🚨 EMERGENCY ALERT 🚨\n\n" +
+                val finalMessage = " EMERGENCY ALERT \n\n" +
                         "$userName needs help!\n" +
                         "Time: $currentTime\n\n" +
                         "Please call me immediately!\n\n" +
                         "$locationText\n\n" +
                         "This is an automated emergency message from Raksha Safety App."
                 
-                Log.d("MainActivity", "📱 SMS message: $finalMessage")
-                Log.d("MainActivity", "📱 Sending to phone: $phone")
+                Log.d("MainActivity", " SMS message: $finalMessage")
+                Log.d("MainActivity", " Sending to phone: $phone")
                 
                 try {
                     // Split long messages if needed
@@ -2853,16 +2853,16 @@ class MainActivity :
                         smsManager.sendMultipartTextMessage(phone, null, parts, null, null)
                     }
                     
-                    Log.d("MainActivity", "✅ SMS SUCCESSFULLY SENT to $name ($phone)")
+                    Log.d("MainActivity", " SMS SUCCESSFULLY SENT to $name ($phone)")
                 } catch (e: Exception) {
-                    Log.e("MainActivity", "❌ Error sending SMS: ${e.message}")
+                    Log.e("MainActivity", " Error sending SMS: ${e.message}")
                 }
             }
             
         } catch (e: SecurityException) {
-            Log.e("MainActivity", "❌ SMS permission denied: ${e.message}")
+            Log.e("MainActivity", " SMS permission denied: ${e.message}")
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error sending SMS to $phone: ${e.message}")
+            Log.e("MainActivity", " Error sending SMS to $phone: ${e.message}")
             e.printStackTrace()
         }
     }
@@ -2880,7 +2880,7 @@ class MainActivity :
             // Check location permission
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
                 if (checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                    Log.w("MainActivity", "⚠️ Location permission not granted")
+                    Log.w("MainActivity", " Location permission not granted")
                     callback(null)
                     return
                 }
@@ -2891,16 +2891,16 @@ class MainActivity :
                 ?: locationManager.getLastKnownLocation(android.location.LocationManager.NETWORK_PROVIDER)
             
             if (lastKnownLocation != null) {
-                Log.d("MainActivity", "📍 Using last known location: ${lastKnownLocation.latitude}, ${lastKnownLocation.longitude}")
+                Log.d("MainActivity", " Using last known location: ${lastKnownLocation.latitude}, ${lastKnownLocation.longitude}")
                 callback(lastKnownLocation)
             } else {
                 // Request fresh location
-                Log.d("MainActivity", "📍 Requesting fresh location...")
+                Log.d("MainActivity", " Requesting fresh location...")
                 requestFreshLocation(callback)
             }
             
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error getting location: ${e.message}")
+            Log.e("MainActivity", " Error getting location: ${e.message}")
             callback(null)
         }
     }
@@ -2911,7 +2911,7 @@ class MainActivity :
             
             val locationListener = object : android.location.LocationListener {
                 override fun onLocationChanged(location: android.location.Location) {
-                    Log.d("MainActivity", "📍 Fresh location received: ${location.latitude}, ${location.longitude}")
+                    Log.d("MainActivity", " Fresh location received: ${location.latitude}, ${location.longitude}")
                     locationManager.removeUpdates(this)
                     callback(location)
                 }
@@ -2936,7 +2936,7 @@ class MainActivity :
             }, 10000)
             
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error requesting fresh location: ${e.message}")
+            Log.e("MainActivity", " Error requesting fresh location: ${e.message}")
             callback(null)
         }
     }
@@ -2980,7 +2980,7 @@ class MainActivity :
     
     private fun cancelSOSDuringVibration() {
         try {
-            Log.d("MainActivity", "🛑 Cancelling SOS during vibration phase")
+            Log.d("MainActivity", " Cancelling SOS during vibration phase")
             
             // Stop vibration immediately
             stopEmergencyVibration()
@@ -2992,7 +2992,7 @@ class MainActivity :
             // Show cancellation confirmation
             val notification = androidx.core.app.NotificationCompat.Builder(this, "emergency_cancel")
                 .setSmallIcon(android.R.drawable.ic_dialog_info)
-                .setContentTitle("✅ SOS CANCELLED")
+                .setContentTitle(" SOS CANCELLED")
                 .setContentText("Emergency SOS has been cancelled successfully")
                 .setPriority(androidx.core.app.NotificationCompat.PRIORITY_HIGH)
                 .setAutoCancel(true)
@@ -3001,25 +3001,25 @@ class MainActivity :
             
             notificationManager.notify(1000, notification)
             
-            Log.d("MainActivity", "✅ SOS cancelled during vibration phase")
+            Log.d("MainActivity", " SOS cancelled during vibration phase")
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error cancelling SOS during vibration: ${e.message}")
+            Log.e("MainActivity", " Error cancelling SOS during vibration: ${e.message}")
         }
     }
     
     private fun showVibrationCancelDialog(gesture: String) {
         runOnUiThread {
             val dialog = android.app.AlertDialog.Builder(this)
-                .setTitle("🚨 EMERGENCY SOS ACTIVE")
+                .setTitle(" EMERGENCY SOS ACTIVE")
                 .setMessage("Vibration phase in progress!\n\nGesture: $gesture\n\nSOS will activate after vibration ends unless you cancel NOW.")
                 .setCancelable(false)
                 .setPositiveButton("CANCEL SOS") { _, _ ->
                     cancelSOSDuringVibration()
-                    android.widget.Toast.makeText(this, "🛑 Emergency SOS Cancelled", android.widget.Toast.LENGTH_LONG).show()
+                    android.widget.Toast.makeText(this, " Emergency SOS Cancelled", android.widget.Toast.LENGTH_LONG).show()
                 }
                 .setNegativeButton("Continue SOS") { dialog, _ ->
                     dialog.dismiss()
-                    android.widget.Toast.makeText(this, "⚠️ SOS will continue after vibration", android.widget.Toast.LENGTH_SHORT).show()
+                    android.widget.Toast.makeText(this, " SOS will continue after vibration", android.widget.Toast.LENGTH_SHORT).show()
                 }
                 .create()
             
@@ -3042,7 +3042,7 @@ class MainActivity :
             val height = call.argument<Int>("height") ?: 0
             
             if (imageBytes != null && width > 0 && height > 0) {
-                Log.d("MainActivity", "📷 Processing Flutter camera image: ${width}x${height}")
+                Log.d("MainActivity", "� Processing Flutter camera image: ${width}x${height}")
                 
                 // Convert bytes to bitmap
                 val bitmap = createBitmapFromBytes(imageBytes, width, height)
@@ -3050,9 +3050,9 @@ class MainActivity :
                 if (bitmap != null && gestureHelper != null) {
                     // Process through MediaPipe
                     val gestureResult = gestureHelper?.recognizeImage(bitmap)
-                    Log.d("MainActivity", "✅ Flutter camera image processed through MediaPipe")
+                    Log.d("MainActivity", " Flutter camera image processed through MediaPipe")
                 } else {
-                    Log.w("MainActivity", "❌ Failed to create bitmap or gestureHelper null")
+                    Log.w("MainActivity", " Failed to create bitmap or gestureHelper null")
                 }
                 
                 result.success("Image processed")
@@ -3061,7 +3061,7 @@ class MainActivity :
             }
             
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error processing camera image bytes: ${e.message}")
+            Log.e("MainActivity", " Error processing camera image bytes: ${e.message}")
             result.error("PROCESSING_ERROR", e.message, null)
         }
     }
@@ -3081,7 +3081,7 @@ class MainActivity :
             
             Bitmap.createBitmap(pixels, width, height, Bitmap.Config.ARGB_8888)
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error creating bitmap from bytes: ${e.message}")
+            Log.e("MainActivity", " Error creating bitmap from bytes: ${e.message}")
             null
         }
     }
@@ -3089,7 +3089,7 @@ class MainActivity :
     // Start ONLY MediaPipe processing without native camera
     private fun startMediaPipeProcessingOnly(result: MethodChannel.Result) {
         try {
-            Log.d("MainActivity", "🎯 Starting MediaPipe processing ONLY (no native camera)")
+            Log.d("MainActivity", " Starting MediaPipe processing ONLY (no native camera)")
             
             // Initialize MediaPipe gesture helper if not already done
             if (gestureHelper == null) {
@@ -3099,14 +3099,14 @@ class MainActivity :
                 )
             }
             
-            Log.d("MainActivity", "✅ MediaPipe processing ready - waiting for Flutter camera frames")
+            Log.d("MainActivity", " MediaPipe processing ready - waiting for Flutter camera frames")
             result.success(mapOf(
                 "status" to "ready",
                 "message" to "MediaPipe ready for processing"
             ))
             
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error starting MediaPipe processing: ${e.message}")
+            Log.e("MainActivity", " Error starting MediaPipe processing: ${e.message}")
             result.error("MEDIAPIPE_ERROR", e.message, null)
         }
     }
@@ -3114,11 +3114,11 @@ class MainActivity :
     // Request background camera permission for emergency system
     private fun requestBackgroundCameraPermission(result: MethodChannel.Result) {
         try {
-            Log.d("MainActivity", "📷 Requesting background camera permission for emergency system")
+            Log.d("MainActivity", "� Requesting background camera permission for emergency system")
             
             // Show explanation dialog to user
             val builder = android.app.AlertDialog.Builder(this)
-            builder.setTitle("🚨 Emergency Camera Access")
+            builder.setTitle(" Emergency Camera Access")
             builder.setMessage("""
                 Raksha needs camera access "Allow all the time" to:
                 
@@ -3157,7 +3157,7 @@ class MainActivity :
             builder.show()
             
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error requesting background camera permission: ${e.message}")
+            Log.e("MainActivity", " Error requesting background camera permission: ${e.message}")
             result.error("PERMISSION_ERROR", e.message, null)
         }
     }

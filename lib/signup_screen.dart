@@ -1,4 +1,4 @@
-// lib/signup_screen.dart
+﻿// lib/signup_screen.dart
 
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -90,7 +90,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     if (!_isValidEmail(email)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("❌ Please enter a valid email address (e.g., user@gmail.com)"),
+          content: Text(" Please enter a valid email address (e.g., user@gmail.com)"),
           backgroundColor: Colors.red,
           duration: Duration(seconds: 3),
         ),
@@ -161,7 +161,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           context: context,
           barrierDismissible: false,
           builder: (context) => AlertDialog(
-            title: const Text("✅ Account Created!"),
+            title: const Text(" Account Created!"),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -181,7 +181,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 const Text("3. Return to Raksha and log in"),
                 const SizedBox(height: 16),
                 const Text(
-                  "⚠️ You must verify your email before you can log in.",
+                  " You must verify your email before you can log in.",
                   style: TextStyle(
                     color: Colors.red,
                     fontWeight: FontWeight.bold,
@@ -213,11 +213,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
     } on FirebaseAuthException catch (e) {
       String message = "Sign up failed.";
       if (e.code == 'email-already-in-use') {
-        message = "❌ This email is already registered. Please login instead.";
+        message = " This email is already registered. Please login instead.";
       } else if (e.code == 'invalid-email') {
-        message = "❌ Invalid email format. Please enter a valid email address.";
+        message = " Invalid email format. Please enter a valid email address.";
       } else if (e.code == 'weak-password') {
-        message = "❌ Password is too weak. Use at least 6 characters.";
+        message = " Password is too weak. Use at least 6 characters.";
       }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -227,10 +227,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
         ),
       );
     } catch (e) {
-      print("General Sign Up Error: $e");
+      // debug removed
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("❌ An unexpected error occurred. Please try again."),
+          content: Text(" An unexpected error occurred. Please try again."),
           backgroundColor: Colors.red,
         ),
       );

@@ -1,4 +1,4 @@
-package com.example.raksha
+﻿package com.example.raksha
 
 import android.media.AudioFormat
 import android.media.AudioRecord
@@ -67,7 +67,7 @@ class SimpleVoiceDetector(
             }
             detectionThread?.start()
             
-            Log.d(TAG, "✅ Simple voice detector started")
+            Log.d(TAG, " Simple voice detector started")
             
         } catch (e: Exception) {
             Log.e(TAG, "Error starting detector: ${e.message}")
@@ -94,7 +94,7 @@ class SimpleVoiceDetector(
         var isVoiceActive = false
         var consecutiveVoiceFrames = 0
         
-        Log.d(TAG, "🎧 Voice pattern detection thread started")
+        Log.d(TAG, "� Voice pattern detection thread started")
         
         while (isRunning) {
             try {
@@ -113,7 +113,7 @@ class SimpleVoiceDetector(
                             voiceStartTime = currentTime
                             isVoiceActive = true
                             consecutiveVoiceFrames = 1
-                            Log.d(TAG, "🗣️ Voice activity started (RMS: $rms)")
+                            Log.d(TAG, "� Voice activity started (RMS: $rms)")
                         } else {
                             consecutiveVoiceFrames++
                         }
@@ -121,7 +121,7 @@ class SimpleVoiceDetector(
                         // Voice ended
                         val voiceDuration = currentTime - voiceStartTime
                         
-                        Log.d(TAG, "🔇 Voice ended. Duration: ${voiceDuration}ms, Frames: $consecutiveVoiceFrames")
+                        Log.d(TAG, "� Voice ended. Duration: ${voiceDuration}ms, Frames: $consecutiveVoiceFrames")
                         
                         // Check if voice duration matches expected pattern
                         if (voiceDuration >= MIN_VOICE_DURATION_MS && 
@@ -130,7 +130,7 @@ class SimpleVoiceDetector(
                             
                             // Check cooldown
                             if (currentTime - lastDetectionTime > COOLDOWN_MS) {
-                                Log.d(TAG, "🚨 VOICE PATTERN DETECTED! Duration: ${voiceDuration}ms, Frames: $consecutiveVoiceFrames")
+                                Log.d(TAG, " VOICE PATTERN DETECTED! Duration: ${voiceDuration}ms, Frames: $consecutiveVoiceFrames")
                                 lastDetectionTime = currentTime
                                 
                                 // Trigger callback on main thread
@@ -141,7 +141,7 @@ class SimpleVoiceDetector(
                                 Log.d(TAG, "⏰ In cooldown period, ignoring")
                             }
                         } else {
-                            Log.d(TAG, "❌ Voice too short/long or not enough frames: ${voiceDuration}ms, $consecutiveVoiceFrames frames")
+                            Log.d(TAG, " Voice too short/long or not enough frames: ${voiceDuration}ms, $consecutiveVoiceFrames frames")
                         }
                         
                         isVoiceActive = false

@@ -1,4 +1,4 @@
-package com.example.raksha
+﻿package com.example.raksha
 
 import android.accessibilityservice.AccessibilityService
 import android.content.Intent
@@ -21,10 +21,10 @@ class RakshaAccessibilityService : AccessibilityService(), RecognitionListener {
     
     override fun onServiceConnected() {
         super.onServiceConnected()
-        Log.d(TAG, "🔓 Raksha Accessibility Service Connected")
+        Log.d(TAG, " Raksha Accessibility Service Connected")
         // Voice detection is handled by RakshaForegroundService only
         // Accessibility service is kept for system-wide gesture monitoring only
-        Log.d(TAG, "✅ Accessibility service active (voice handled by ForegroundService)")
+        Log.d(TAG, " Accessibility service active (voice handled by ForegroundService)")
     }
     
     private fun loadTriggerWords() {
@@ -43,7 +43,7 @@ class RakshaAccessibilityService : AccessibilityService(), RecognitionListener {
     
     private fun startVoiceDetection() {
         try {
-            Log.d(TAG, "🎤 Starting ACCESSIBILITY voice detection (bypasses Android 15)")
+            Log.d(TAG, " Starting ACCESSIBILITY voice detection (bypasses Android 15)")
             
             if (SpeechRecognizer.isRecognitionAvailable(this)) {
                 speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
@@ -54,12 +54,12 @@ class RakshaAccessibilityService : AccessibilityService(), RecognitionListener {
                     startListening()
                 }, 2000)
                 
-                Log.d(TAG, "✅ Voice detection initialized via accessibility service")
+                Log.d(TAG, " Voice detection initialized via accessibility service")
             } else {
-                Log.e(TAG, "❌ Speech recognition not available")
+                Log.e(TAG, " Speech recognition not available")
             }
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error starting voice detection: ${e.message}")
+            Log.e(TAG, " Error starting voice detection: ${e.message}")
         }
     }
     
@@ -78,20 +78,20 @@ class RakshaAccessibilityService : AccessibilityService(), RecognitionListener {
             
             isListening = true
             speechRecognizer?.startListening(intent)
-            Log.d(TAG, "🎤 Listening via accessibility service...")
+            Log.d(TAG, " Listening via accessibility service...")
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error starting listening: ${e.message}")
+            Log.e(TAG, " Error starting listening: ${e.message}")
             isListening = false
         }
     }
     
     // RecognitionListener implementation
     override fun onReadyForSpeech(params: Bundle?) {
-        Log.d(TAG, "🎤 Ready for speech")
+        Log.d(TAG, " Ready for speech")
     }
     
     override fun onBeginningOfSpeech() {
-        Log.d(TAG, "🎤 Speech started")
+        Log.d(TAG, " Speech started")
     }
     
     override fun onRmsChanged(rmsdB: Float) {}
@@ -99,7 +99,7 @@ class RakshaAccessibilityService : AccessibilityService(), RecognitionListener {
     override fun onBufferReceived(buffer: ByteArray?) {}
     
     override fun onEndOfSpeech() {
-        Log.d(TAG, "🎤 Speech ended")
+        Log.d(TAG, " Speech ended")
     }
     
     override fun onError(error: Int) {
@@ -116,7 +116,7 @@ class RakshaAccessibilityService : AccessibilityService(), RecognitionListener {
             else -> "Error $error"
         }
         
-        Log.e(TAG, "🎤 Error: $errorMsg")
+        Log.e(TAG, " Error: $errorMsg")
         isListening = false
         
         // Restart after error
@@ -130,12 +130,12 @@ class RakshaAccessibilityService : AccessibilityService(), RecognitionListener {
         if (matches != null && matches.isNotEmpty()) {
             for (match in matches) {
                 val spokenText = match.lowercase()
-                Log.d(TAG, "🎤 Heard: '$spokenText'")
+                Log.d(TAG, " Heard: '$spokenText'")
                 
                 // Check for triggers
                 for (trigger in voiceTriggers) {
                     if (spokenText.contains(trigger)) {
-                        Log.d(TAG, "🚨 TRIGGER DETECTED: '$trigger'")
+                        Log.d(TAG, " TRIGGER DETECTED: '$trigger'")
                         launchSOSCountdown(trigger)
                         return
                     }
@@ -154,12 +154,12 @@ class RakshaAccessibilityService : AccessibilityService(), RecognitionListener {
         val matches = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
         if (matches != null && matches.isNotEmpty()) {
             val spokenText = matches[0].lowercase()
-            Log.d(TAG, "🎤 Partial: '$spokenText'")
+            Log.d(TAG, " Partial: '$spokenText'")
             
             // Quick check on partial results
             for (trigger in voiceTriggers) {
                 if (spokenText.contains(trigger)) {
-                    Log.d(TAG, "🚨 TRIGGER DETECTED (partial): '$trigger'")
+                    Log.d(TAG, " TRIGGER DETECTED (partial): '$trigger'")
                     launchSOSCountdown(trigger)
                     return
                 }
@@ -171,7 +171,7 @@ class RakshaAccessibilityService : AccessibilityService(), RecognitionListener {
     
     private fun launchSOSCountdown(trigger: String) {
         try {
-            Log.d(TAG, "🚀 Launching SOS countdown for: $trigger")
+            Log.d(TAG, " Launching SOS countdown for: $trigger")
             
             val intent = Intent(this, SOSCountdownActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or 
@@ -181,15 +181,15 @@ class RakshaAccessibilityService : AccessibilityService(), RecognitionListener {
             }
             startActivity(intent)
             
-            Log.d(TAG, "✅ SOS countdown launched")
+            Log.d(TAG, " SOS countdown launched")
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error launching SOS: ${e.message}")
+            Log.e(TAG, " Error launching SOS: ${e.message}")
         }
     }
     
     private fun startCrossAppMonitoring() {
         try {
-            Log.d(TAG, "🌐 Starting cross-app monitoring via accessibility service")
+            Log.d(TAG, " Starting cross-app monitoring via accessibility service")
             
             // Start the foreground service for continuous monitoring
             val intent = Intent(this, RakshaForegroundService::class.java).apply {
@@ -198,9 +198,9 @@ class RakshaAccessibilityService : AccessibilityService(), RecognitionListener {
             }
             startForegroundService(intent)
             
-            Log.d(TAG, "✅ Cross-app monitoring service started")
+            Log.d(TAG, " Cross-app monitoring service started")
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error starting cross-app monitoring: ${e.message}")
+            Log.e(TAG, " Error starting cross-app monitoring: ${e.message}")
         }
     }
     
@@ -210,12 +210,12 @@ class RakshaAccessibilityService : AccessibilityService(), RecognitionListener {
     }
     
     override fun onInterrupt() {
-        Log.d(TAG, "🔓 Raksha Accessibility Service Interrupted")
+        Log.d(TAG, " Raksha Accessibility Service Interrupted")
     }
     
     override fun onDestroy() {
         super.onDestroy()
-        Log.d(TAG, "🔓 Raksha Accessibility Service Destroyed")
+        Log.d(TAG, " Raksha Accessibility Service Destroyed")
         speechRecognizer?.destroy()
     }
 }

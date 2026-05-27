@@ -1,4 +1,4 @@
-package com.example.raksha
+﻿package com.example.raksha
 
 import android.app.KeyguardManager
 import android.content.BroadcastReceiver
@@ -56,7 +56,7 @@ class SOSCountdownActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        Log.d(TAG, "🚀 SOSCountdownActivity started from background")
+        Log.d(TAG, " SOSCountdownActivity started from background")
         
         // CRITICAL: Acquire wake lock to keep screen on and prevent activity from being killed
         try {
@@ -68,7 +68,7 @@ class SOSCountdownActivity : AppCompatActivity() {
                 "Raksha::SOSWakeLock"
             )
             wakeLock?.acquire(20000) // 20 seconds max
-            Log.d(TAG, "✅ Wake lock acquired")
+            Log.d(TAG, " Wake lock acquired")
         } catch (e: Exception) {
             Log.e(TAG, "Error acquiring wake lock: ${e.message}")
         }
@@ -100,9 +100,9 @@ class SOSCountdownActivity : AppCompatActivity() {
                 @Suppress("DEPRECATION")
                 window.setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT)
             }
-            Log.d(TAG, "✅ Window type set for overlay")
+            Log.d(TAG, " Window type set for overlay")
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error setting window type: ${e.message}")
+            Log.e(TAG, " Error setting window type: ${e.message}")
         }
         
         // Dismiss keyguard
@@ -140,7 +140,7 @@ class SOSCountdownActivity : AppCompatActivity() {
         }
         
         titleText = TextView(this).apply {
-            text = "🚨 EMERGENCY SOS"
+            text = " EMERGENCY SOS"
             textSize = 32f
             setTextColor(android.graphics.Color.WHITE)
             gravity = android.view.Gravity.CENTER
@@ -201,7 +201,7 @@ class SOSCountdownActivity : AppCompatActivity() {
         countDownTimer = object : CountDownTimer(10000, 1000) {
             override fun onTick(millisUntilFinished: Long) {
                 if (isCancelled) {
-                    Log.d(TAG, "🛑 Countdown cancelled by user")
+                    Log.d(TAG, " Countdown cancelled by user")
                     cancel()
                     return
                 }
@@ -223,11 +223,11 @@ class SOSCountdownActivity : AppCompatActivity() {
     
     private fun sendSOSAndClose() {
         if (isCancelled) {
-            Log.d(TAG, "🛑 SMS sending cancelled")
+            Log.d(TAG, " SMS sending cancelled")
             return
         }
         
-        Log.d(TAG, "📱 Sending SOS SMS")
+        Log.d(TAG, " Sending SOS SMS")
         
         // Stop vibration
         try {
@@ -244,7 +244,7 @@ class SOSCountdownActivity : AppCompatActivity() {
         
         // Update UI
         layout.setBackgroundColor(android.graphics.Color.parseColor("#4CAF50")) // Green
-        titleText.text = "✅ SOS ACTIVATED"
+        titleText.text = " SOS ACTIVATED"
         messageText.text = "Sending emergency SMS..."
         countdownText.text = "✓"
         triggerText.text = "Help is on the way!"
@@ -255,16 +255,16 @@ class SOSCountdownActivity : AppCompatActivity() {
     }
     
     private fun sendSOSMessages() {
-        Log.d(TAG, "📱 ========== SENDING SOS MESSAGES FROM ACTIVITY ==========")
+        Log.d(TAG, " ========== SENDING SOS MESSAGES FROM ACTIVITY ==========")
         
         try {
             val userId = FirebaseAuth.getInstance().currentUser?.uid
             Log.d(TAG, "User ID: $userId")
             
             if (userId == null) {
-                Log.e(TAG, "❌ No user logged in")
+                Log.e(TAG, " No user logged in")
                 messageText.text = "Error: Not logged in"
-                android.widget.Toast.makeText(this, "❌ Error: Not logged in", android.widget.Toast.LENGTH_LONG).show()
+                android.widget.Toast.makeText(this, " Error: Not logged in", android.widget.Toast.LENGTH_LONG).show()
                 
                 // Close after 3 seconds even if error
                 Handler(Looper.getMainLooper()).postDelayed({
@@ -280,21 +280,21 @@ class SOSCountdownActivity : AppCompatActivity() {
                 .document(userId)
                 .get()
                 .addOnSuccessListener { document ->
-                    Log.d(TAG, "✅ Firestore document fetched successfully")
+                    Log.d(TAG, " Firestore document fetched successfully")
                     
                     if (document.exists()) {
-                        Log.d(TAG, "✅ Document exists, reading contacts...")
+                        Log.d(TAG, " Document exists, reading contacts...")
                         
                         val contacts = document.get("emergencyContacts") as? List<Map<String, Any>>
                         val location = document.getString("lastKnownLocation") ?: "Location unavailable"
                         
-                        Log.d(TAG, "📋 Contacts found: ${contacts?.size ?: 0}")
-                        Log.d(TAG, "📍 Location: $location")
+                        Log.d(TAG, " Contacts found: ${contacts?.size ?: 0}")
+                        Log.d(TAG, " Location: $location")
                         
                         if (contacts == null || contacts.isEmpty()) {
-                            Log.e(TAG, "❌ NO EMERGENCY CONTACTS CONFIGURED!")
-                            messageText.text = "❌ No emergency contacts"
-                            android.widget.Toast.makeText(this, "❌ No emergency contacts configured!", android.widget.Toast.LENGTH_LONG).show()
+                            Log.e(TAG, " NO EMERGENCY CONTACTS CONFIGURED!")
+                            messageText.text = " No emergency contacts"
+                            android.widget.Toast.makeText(this, " No emergency contacts configured!", android.widget.Toast.LENGTH_LONG).show()
                             Handler(Looper.getMainLooper()).postDelayed({ finish() }, 5000)
                             return@addOnSuccessListener
                         }
@@ -306,8 +306,8 @@ class SOSCountdownActivity : AppCompatActivity() {
                             SmsManager.getDefault()
                         }
                         
-                        val message = "🚨 EMERGENCY! I need help! My location: $location - Sent from Raksha Safety App"
-                        Log.d(TAG, "📨 SMS Message: $message")
+                        val message = " EMERGENCY! I need help! My location: $location - Sent from Raksha Safety App"
+                        Log.d(TAG, "� SMS Message: $message")
                         
                         var sentCount = 0
                         
@@ -315,26 +315,26 @@ class SOSCountdownActivity : AppCompatActivity() {
                             val phone = contact["phone"] as? String
                             val name = (contact["name"] as? String) ?: "Unknown"
                             
-                            Log.d(TAG, "📞 Processing contact: $name - $phone")
+                            Log.d(TAG, " Processing contact: $name - $phone")
                             
                             if (phone != null && phone.isNotEmpty()) {
                                 try {
                                     smsManager.sendTextMessage(phone, null, message, null, null)
                                     sentCount++
-                                    Log.d(TAG, "✅ SMS sent successfully to: $name ($phone)")
+                                    Log.d(TAG, " SMS sent successfully to: $name ($phone)")
                                 } catch (e: Exception) {
-                                    Log.e(TAG, "❌ Failed to send SMS to $name ($phone): ${e.message}")
+                                    Log.e(TAG, " Failed to send SMS to $name ($phone): ${e.message}")
                                     e.printStackTrace()
                                 }
                             } else {
-                                Log.e(TAG, "❌ Invalid phone number for contact: $name")
+                                Log.e(TAG, " Invalid phone number for contact: $name")
                             }
                         }
                         
-                        messageText.text = "✅ SMS sent to $sentCount contact(s)!"
-                        Log.d(TAG, "✅ ========== TOTAL SMS SENT: $sentCount ==========")
+                        messageText.text = " SMS sent to $sentCount contact(s)!"
+                        Log.d(TAG, " ========== TOTAL SMS SENT: $sentCount ==========")
                         
-                        android.widget.Toast.makeText(this, "✅ SMS sent to $sentCount contact(s)", android.widget.Toast.LENGTH_LONG).show()
+                        android.widget.Toast.makeText(this, " SMS sent to $sentCount contact(s)", android.widget.Toast.LENGTH_LONG).show()
                         
                         // Start repeating location SMS every 60 seconds
                         startRepeatingLocationSMS(contacts, smsManager)
@@ -344,9 +344,9 @@ class SOSCountdownActivity : AppCompatActivity() {
                             finish()
                         }, 3000)
                     } else {
-                        Log.e(TAG, "❌ User document not found")
+                        Log.e(TAG, " User document not found")
                         messageText.text = "Error: User data not found"
-                        android.widget.Toast.makeText(this, "❌ User data not found", android.widget.Toast.LENGTH_LONG).show()
+                        android.widget.Toast.makeText(this, " User data not found", android.widget.Toast.LENGTH_LONG).show()
                         
                         // Close after 3 seconds
                         Handler(Looper.getMainLooper()).postDelayed({
@@ -355,10 +355,10 @@ class SOSCountdownActivity : AppCompatActivity() {
                     }
                 }
                 .addOnFailureListener { e ->
-                    Log.e(TAG, "❌ Failed to fetch contacts: ${e.message}")
+                    Log.e(TAG, " Failed to fetch contacts: ${e.message}")
                     e.printStackTrace()
                     messageText.text = "Error: ${e.message}"
-                    android.widget.Toast.makeText(this, "❌ Failed to fetch contacts: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
+                    android.widget.Toast.makeText(this, " Failed to fetch contacts: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
                     
                     // Close after 3 seconds even if error
                     Handler(Looper.getMainLooper()).postDelayed({
@@ -367,10 +367,10 @@ class SOSCountdownActivity : AppCompatActivity() {
                 }
                 
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error sending SOS: ${e.message}")
+            Log.e(TAG, " Error sending SOS: ${e.message}")
             e.printStackTrace()
             messageText.text = "Error: ${e.message}"
-            android.widget.Toast.makeText(this, "❌ Error: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
+            android.widget.Toast.makeText(this, " Error: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
             
             // Close after 3 seconds even if error
             Handler(Looper.getMainLooper()).postDelayed({
@@ -381,15 +381,15 @@ class SOSCountdownActivity : AppCompatActivity() {
     
     private fun showVibrationPhase() {
         if (isCancelled) {
-            Log.d(TAG, "🛑 Vibration phase cancelled")
+            Log.d(TAG, " Vibration phase cancelled")
             return
         }
         
-        Log.d(TAG, "📳 Starting 7-second vibration phase")
+        Log.d(TAG, " Starting 7-second vibration phase")
         
         // Update UI for vibration phase
         layout.setBackgroundColor(android.graphics.Color.parseColor("#FFA500")) // Orange
-        titleText.text = "📳 VIBRATING"
+        titleText.text = " VIBRATING"
         messageText.text = "Emergency alert active - Last chance to cancel!"
         countdownText.text = "7"
         countdownText.textSize = 100f
@@ -409,19 +409,19 @@ class SOSCountdownActivity : AppCompatActivity() {
         vibrationRunnable = object : Runnable {
             override fun run() {
                 if (isCancelled) {
-                    Log.d(TAG, "🛑 Vibration countdown cancelled")
+                    Log.d(TAG, " Vibration countdown cancelled")
                     vibrationHandler.removeCallbacks(this)
                     return
                 }
                 
                 vibrateSeconds--
                 countdownText.text = vibrateSeconds.toString()
-                Log.d(TAG, "📳 Vibration countdown: $vibrateSeconds")
+                Log.d(TAG, " Vibration countdown: $vibrateSeconds")
                 
                 if (vibrateSeconds > 0) {
                     vibrationHandler.postDelayed(this, 1000)
                 } else {
-                    Log.d(TAG, "📳 Vibration finished - sending SMS")
+                    Log.d(TAG, " Vibration finished - sending SMS")
                     sendSOSAndClose()
                 }
             }
@@ -448,9 +448,9 @@ class SOSCountdownActivity : AppCompatActivity() {
                 vibrator.vibrate(pattern, -1)
             }
             
-            Log.d(TAG, "✅ Vibration started")
+            Log.d(TAG, " Vibration started")
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Vibration error: ${e.message}")
+            Log.e(TAG, " Vibration error: ${e.message}")
         }
     }
     
@@ -468,7 +468,7 @@ class SOSCountdownActivity : AppCompatActivity() {
                 fetchLocationAndSendSMS(contacts, smsManager)
             }
         }, 60000L, 60000L) // Start after 60s, repeat every 60s
-        Log.d(TAG, "✅ Repeating location SMS started (every 60s)")
+        Log.d(TAG, " Repeating location SMS started (every 60s)")
     }
 
     private fun fetchLocationAndSendSMS(contacts: List<Map<String, Any>>, smsManager: SmsManager) {
@@ -483,14 +483,14 @@ class SOSCountdownActivity : AppCompatActivity() {
                 "https://maps.google.com/?q=${location.latitude},${location.longitude}"
             else "Location unavailable"
 
-            val message = "🚨 LIVE LOCATION UPDATE - I still need help!\n📍 $locationText\n- Raksha Safety App"
+            val message = " LIVE LOCATION UPDATE - I still need help!\n $locationText\n- Raksha Safety App"
 
             for (contact in contacts) {
                 val phone = contact["phone"] as? String ?: continue
                 if (phone.isNotEmpty()) {
                     try {
                         smsManager.sendTextMessage(phone, null, message, null, null)
-                        Log.d(TAG, "✅ Location SMS sent to $phone")
+                        Log.d(TAG, " Location SMS sent to $phone")
                     } catch (e: Exception) {
                         Log.e(TAG, "Failed to send location SMS: ${e.message}")
                     }
@@ -503,11 +503,11 @@ class SOSCountdownActivity : AppCompatActivity() {
 
     private fun cancelSOS() {
         if (isCancelled) {
-            Log.d(TAG, "🛑 Already cancelled")
+            Log.d(TAG, " Already cancelled")
             return
         }
         
-        Log.d(TAG, "🛑 SOS Cancelled by user")
+        Log.d(TAG, " SOS Cancelled by user")
         isCancelled = true
         
         // Cancel countdown timer
@@ -541,20 +541,20 @@ class SOSCountdownActivity : AppCompatActivity() {
         }
         startService(stopRecording)
         
-        android.widget.Toast.makeText(this, "🛑 SOS Cancelled", android.widget.Toast.LENGTH_LONG).show()
+        android.widget.Toast.makeText(this, " SOS Cancelled", android.widget.Toast.LENGTH_LONG).show()
         finish()
     }
     
     override fun onDestroy() {
         super.onDestroy()
-        Log.d(TAG, "🛑 SOSCountdownActivity destroyed")
+        Log.d(TAG, " SOSCountdownActivity destroyed")
         
         // Release wake lock
         try {
             wakeLock?.let {
                 if (it.isHeld) {
                     it.release()
-                    Log.d(TAG, "✅ Wake lock released")
+                    Log.d(TAG, " Wake lock released")
                 }
             }
         } catch (e: Exception) {

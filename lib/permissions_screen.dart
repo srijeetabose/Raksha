@@ -1,4 +1,4 @@
-// lib/permissions_screen.dart
+﻿// lib/permissions_screen.dart
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -48,7 +48,7 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text(
-            '🚨 Emergency System Permissions',
+            ' Emergency System Permissions',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           content: const SingleChildScrollView(
@@ -61,19 +61,19 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
                   style: TextStyle(fontWeight: FontWeight.w600),
                 ),
                 SizedBox(height: 16),
-                Text('📷 Camera: "While using the app" (Required)'),
+                Text('� Camera: "While using the app" (Required)'),
                 Text('• We\'ll use foreground service to stay active'),
                 Text('• Emergency system runs continuously'),
                 SizedBox(height: 8),
-                Text('🎤 Microphone: "While using the app" (Required)'),
+                Text(' Microphone: "While using the app" (Required)'),
                 Text('• Background service keeps microphone active'),
                 SizedBox(height: 8),
-                Text('📍 Location: "Allow all the time"'),
+                Text(' Location: "Allow all the time"'),
                 Text('• Send your location in emergencies'),
                 Text('• Work even when phone is locked'),
                 SizedBox(height: 16),
                 Text(
-                  '⚠️ IMPORTANT: For Location, choose "Allow all the time". For Camera/Microphone, "While using the app" is fine - our background service will handle it!',
+                  ' IMPORTANT: For Location, choose "Allow all the time". For Camera/Microphone, "While using the app" is fine - our background service will handle it!',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Colors.orange,
@@ -95,7 +95,7 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
 
   // DISABLED: Background camera permission causes hanging
   Future<void> _requestBackgroundCameraPermission() async {
-    print("🚫 Background camera permission disabled to prevent hanging");
+    // debug removed
     // This was causing the infinite loading - skip it for now
     return;
   }
@@ -105,7 +105,7 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
     setState(() => _isLoading = true);
 
     try {
-      print("🚀 Starting FAST permission request...");
+      // debug removed
       
       // 1. Request basic permissions with timeout to prevent hanging
       Map<Permission, PermissionStatus> statuses = {};
@@ -114,29 +114,29 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
         statuses = await _requiredPermissions.request().timeout(
           const Duration(seconds: 8),
           onTimeout: () {
-            print("⏰ Permission request timed out - continuing anyway");
+            // debug removed
             return <Permission, PermissionStatus>{};
           },
         );
       } catch (e) {
-        print("❌ Permission request failed: $e - continuing anyway");
+        // debug removed
       }
 
       // Debug: Print permission statuses
-      print("=== PERMISSION STATUSES ===");
+      // debug removed
       for (var entry in statuses.entries) {
-        print("${entry.key}: ${entry.value}");
+        // debug removed
       }
 
       // 2. Show special permission info (don't wait for them)
       _showSpecialPermissionInfo();
 
       // 3. Navigate immediately to avoid hanging
-      print("✅ Permissions processed - navigating to next step");
+      // debug removed
       _navigateToNextStep();
       
     } catch (e) {
-      print("Error requesting permissions: $e");
+      // debug removed
       // Even if there's an error, go to home screen
       Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const HomeScreen()), 
@@ -148,7 +148,7 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
 
   // Show info about special permissions (non-blocking)
   void _showSpecialPermissionInfo() {
-    print("ℹ️ Special permissions info shown - user can enable later in settings");
+    // debug removed
     // Don't show blocking dialogs - just log that user can enable these later
     // The app will work without these initially
   }
@@ -159,15 +159,15 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text("🔓 Enable Display Over Apps"),
+        title: const Text(" Enable Display Over Apps"),
         content: const Text(
-          "🔓 CRITICAL: Enable Display Over Other Apps\n\n"
+          " CRITICAL: Enable Display Over Other Apps\n\n"
           "Steps to follow:\n"
           "1. Tap 'Open Settings' below\n"
           "2. Find 'Raksha' in the app list\n"
           "3. Toggle ON 'Display over other apps'\n"
           "4. Press back button to return here\n\n"
-          "⚠️ Without this, gestures won't work when using other apps!"
+          " Without this, gestures won't work when using other apps!"
         ),
         actions: [
           TextButton(
@@ -201,7 +201,7 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
           "3. Toggle ON the Raksha service\n"
           "4. Confirm 'OK' on the warning dialog\n"
           "5. Press back button to return here\n\n"
-          "⚠️ Without this, emergency detection won't work when screen is locked!"
+          " Without this, emergency detection won't work when screen is locked!"
         ),
         actions: [
           TextButton(
@@ -227,7 +227,7 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
       const platform = MethodChannel('com.example.raksha/permissions');
       await platform.invokeMethod('openAccessibilitySettings');
     } catch (e) {
-      print("Failed to open accessibility settings: $e");
+      // debug removed
     }
   }
 
@@ -237,17 +237,17 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
       const platform = MethodChannel('com.example.raksha/permissions');
       await platform.invokeMethod('openOverlaySettings');
     } catch (e) {
-      print("Failed to open overlay settings: $e");
+      // debug removed
     }
   }
 
   // Navigate to next onboarding step
   void _navigateToNextStep() async {
-    print("=== NAVIGATING TO NEXT ONBOARDING STEP ===");
+    // debug removed
     
     final userId = FirebaseAuth.instance.currentUser?.uid;
     if (userId == null) {
-      print("No user ID, going to HomeScreen");
+      // debug removed
       if (mounted) {
         Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(builder: (_) => const HomeScreen()), (route) => false);
@@ -262,22 +262,22 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
           .get();
       
       final String? role = doc.data()?['userRole'] as String?;
-      print("User role: $role");
+      // debug removed
 
       if (mounted) {
         if (role == 'police') {
-          print("Police user - going directly to HomeScreen");
+          // debug removed
           Navigator.of(context).pushAndRemoveUntil(
               MaterialPageRoute(builder: (_) => const HomeScreen()), (route) => false);
         } else {
-          print("Regular user - going to PIN setup");
+          // debug removed
           Navigator.of(context).pushAndRemoveUntil(
               MaterialPageRoute(builder: (_) => const OnboardingPinScreen()), 
               (route) => false);
         }
       }
     } catch (error) {
-      print("Error in navigation: $error");
+      // debug removed
       // Default to PIN setup for regular users
       if (mounted) {
         Navigator.of(context).pushAndRemoveUntil(
@@ -289,11 +289,11 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
 
   // --- Navigation Logic ---
   void _navigateBasedOnRole() async {
-    print("=== STARTING NAVIGATION ===");
+    // debug removed
     
     final userId = FirebaseAuth.instance.currentUser?.uid;
     if (userId == null) {
-      print("No user ID, going to HomeScreen");
+      // debug removed
       if (mounted) {
         Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(builder: (_) => const HomeScreen()), (route) => false);
@@ -302,7 +302,7 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
     }
 
     try {
-      print("Fetching user data for: $userId");
+      // debug removed
       
       // Update onboarding completion status FIRST
       await FirebaseFirestore.instance
@@ -314,7 +314,7 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
         'permissionsGranted': true,
       });
       
-      print("Updated onboarding status to complete");
+      // debug removed
 
       final doc = await FirebaseFirestore.instance
           .collection('users')
@@ -322,25 +322,25 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
           .get();
       
       final String? role = doc.data()?['userRole'] as String?;
-      print("User role: $role");
+      // debug removed
 
       if (mounted) {
         if (role == 'police') {
-          print("Navigating to HomeScreen for police");
+          // debug removed
           Navigator.of(context).pushAndRemoveUntil(
               MaterialPageRoute(builder: (_) => const HomeScreen()), (route) => false);
         } else {
-          print("Navigating to OnboardingPinScreen for regular user");
-          print("Current user data: ${doc.data()}");
+          // debug removed
+          // debug removed
           
           // Check if PIN is already set
           final pinHash = doc.data()?['secureVaultPinHash'] as String?;
           if (pinHash != null) {
-            print("PIN already exists, going to HomeScreen");
+            // debug removed
             Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute(builder: (_) => const HomeScreen()), (route) => false);
           } else {
-            print("No PIN found, going to PIN setup");
+            // debug removed
             Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute(builder: (_) => const OnboardingPinScreen()), 
                 (route) => false);
@@ -348,7 +348,7 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
         }
       }
     } catch (error) {
-      print("Error in navigation: $error");
+      // debug removed
       if (mounted) {
         Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(builder: (_) => const HomeScreen()), (route) => false);
@@ -474,8 +474,8 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
                           _buildPermissionItem(Icons.storage, "Storage/Media", "To save recordings and upload Police IDs"),
                           _buildPermissionItem(Icons.sms, "SMS", "To send immediate alerts without needing the internet"),
                           _buildPermissionItem(Icons.notifications, "Notifications", "To keep the silent SOS service running in the background"),
-                          _buildPermissionItem(Icons.layers, "Display Over Apps", "⚠️ MANUAL SETUP: We'll guide you to enable this in Settings for cross-app detection"),
-                          _buildPermissionItem(Icons.accessibility, "Accessibility Service", "⚠️ MANUAL SETUP: We'll guide you to enable this in Settings > Accessibility for system-wide detection"),
+                          _buildPermissionItem(Icons.layers, "Display Over Apps", " MANUAL SETUP: We'll guide you to enable this in Settings for cross-app detection"),
+                          _buildPermissionItem(Icons.accessibility, "Accessibility Service", " MANUAL SETUP: We'll guide you to enable this in Settings > Accessibility for system-wide detection"),
                         ],
                       ),
                     ),
@@ -510,7 +510,7 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
                     width: double.infinity,
                     child: TextButton(
                       onPressed: () {
-                        print("=== CONTINUING WITHOUT WAITING FOR PERMISSIONS ===");
+                        // debug removed
                         setState(() => _isLoading = false);
                         _navigateToNextStep();
                       },

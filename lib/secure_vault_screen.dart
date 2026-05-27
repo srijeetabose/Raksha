@@ -1,4 +1,4 @@
-// lib/secure_vault_screen.dart
+﻿// lib/secure_vault_screen.dart
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -38,12 +38,12 @@ class _SecureVaultScreenState extends State<SecureVaultScreen> {
       _canCheckBiometrics = await _localAuth.canCheckBiometrics;
       _availableBiometrics = await _localAuth.getAvailableBiometrics();
       
-      print("✅ Can check biometrics: $_canCheckBiometrics");
-      print("✅ Available biometrics: $_availableBiometrics");
+      // debug removed
+      // debug removed
       
       setState(() {});
     } catch (e) {
-      print("❌ Error checking biometric support: $e");
+      // debug removed
       _canCheckBiometrics = false;
     }
   }
@@ -69,13 +69,13 @@ class _SecureVaultScreenState extends State<SecureVaultScreen> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("❌ Authentication failed"),
+            content: Text(" Authentication failed"),
             backgroundColor: Colors.red,
           ),
         );
       }
     } catch (e) {
-      print("❌ Biometric authentication error: $e");
+      // debug removed
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error: $e")),
       );
@@ -89,14 +89,14 @@ class _SecureVaultScreenState extends State<SecureVaultScreen> {
     try {
       final userId = FirebaseAuth.instance.currentUser?.uid;
       if (userId == null) {
-        print("❌ No user logged in");
+        // debug removed
         setState(() {
           _recordings = [];
         });
         return;
       }
       
-      print("📋 Loading recordings from Firebase for user: $userId");
+      // debug removed
       
       // Load recordings from Firebase
       try {
@@ -111,16 +111,16 @@ class _SecureVaultScreenState extends State<SecureVaultScreen> {
           _recordings = snapshot.docs.map((doc) => doc.data()).toList();
         });
         
-        print("✅ Loaded ${_recordings.length} recordings from Firebase");
+        // debug removed
       } catch (e) {
-        print("❌ Firebase error: $e");
+        // debug removed
         
         // Show error message to user
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                "⚠️ Cannot load recordings: Firebase permission error\n\n"
+                " Cannot load recordings: Firebase permission error\n\n"
                 "Please update Firestore rules in Firebase Console:\n"
                 "match /users/{userId}/secureVaultRecordings/{recordingId} {\n"
                 "  allow read, write: if request.auth != null && request.auth.uid == userId;\n"
@@ -137,7 +137,7 @@ class _SecureVaultScreenState extends State<SecureVaultScreen> {
         });
       }
     } catch (e) {
-      print("❌ Error loading recordings: $e");
+      // debug removed
       setState(() {
         _recordings = [];
       });
@@ -153,7 +153,7 @@ class _SecureVaultScreenState extends State<SecureVaultScreen> {
 
       if (audioPath == null && videoPath == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("❌ No recording paths found")),
+          const SnackBar(content: Text(" No recording paths found")),
         );
         return;
       }
@@ -210,10 +210,10 @@ class _SecureVaultScreenState extends State<SecureVaultScreen> {
       ));
       
     } catch (e) {
-      print("❌ Error playing recording: $e");
+      // debug removed
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("❌ Error: $e"),
+          content: Text(" Error: $e"),
           duration: const Duration(seconds: 5),
         ),
       );
@@ -224,7 +224,7 @@ class _SecureVaultScreenState extends State<SecureVaultScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("🔒 Secure Vault"),
+        title: const Text(" Secure Vault"),
         backgroundColor: Colors.purple,
         foregroundColor: Colors.white,
       ),
@@ -481,7 +481,7 @@ class _SecureVaultScreenState extends State<SecureVaultScreen> {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null || user.email == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("❌ No user logged in")),
+          const SnackBar(content: Text(" No user logged in")),
         );
         return;
       }
@@ -502,11 +502,11 @@ class _SecureVaultScreenState extends State<SecureVaultScreen> {
       
       _passwordController.clear();
     } on FirebaseAuthException catch (e) {
-      String errorMessage = "❌ Authentication failed";
+      String errorMessage = " Authentication failed";
       if (e.code == 'wrong-password') {
-        errorMessage = "❌ Incorrect password";
+        errorMessage = " Incorrect password";
       } else if (e.code == 'too-many-requests') {
-        errorMessage = "❌ Too many attempts. Try again later";
+        errorMessage = " Too many attempts. Try again later";
       }
       
       ScaffoldMessenger.of(context).showSnackBar(
@@ -530,7 +530,7 @@ class _SecureVaultScreenState extends State<SecureVaultScreen> {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null || user.email == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("❌ No email found for this account")),
+          const SnackBar(content: Text(" No email found for this account")),
         );
         return;
       }
@@ -539,7 +539,7 @@ class _SecureVaultScreenState extends State<SecureVaultScreen> {
       bool confirmed = await showDialog<bool>(
             context: context,
             builder: (context) => AlertDialog(
-              title: const Text("🔐 Reset Password"),
+              title: const Text(" Reset Password"),
               content: Text(
                 "A password reset link will be sent to:\n\n${user.email}\n\n"
                 "After resetting your password, you can use it to access the Secure Vault."
@@ -568,7 +568,7 @@ class _SecureVaultScreenState extends State<SecureVaultScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("✅ Password reset email sent to ${user.email}"),
+          content: Text(" Password reset email sent to ${user.email}"),
           backgroundColor: Colors.green,
           duration: const Duration(seconds: 5),
         ),
@@ -578,7 +578,7 @@ class _SecureVaultScreenState extends State<SecureVaultScreen> {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text("📧 Check Your Email"),
+          title: const Text("� Check Your Email"),
           content: const Text(
             "We've sent a password reset link to your email.\n\n"
             "Steps:\n"
@@ -600,7 +600,7 @@ class _SecureVaultScreenState extends State<SecureVaultScreen> {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("❌ Error: $e")),
+        SnackBar(content: Text(" Error: $e")),
       );
     } finally {
       setState(() => _isLoading = false);
@@ -625,7 +625,7 @@ class _SecureVaultScreenState extends State<SecureVaultScreen> {
                 const Icon(Icons.security, color: Colors.purple, size: 32),
                 const SizedBox(height: 8),
                 const Text(
-                  "🔒 Secure Vault Unlocked",
+                  " Secure Vault Unlocked",
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -817,7 +817,7 @@ class _SecureVaultScreenState extends State<SecureVaultScreen> {
       bool confirmed = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text("🛡️ Confirm Safety"),
+          title: const Text(" Confirm Safety"),
           content: const Text(
             "Are you sure you are safe?\n\n"
             "This will stop:\n"
@@ -857,7 +857,7 @@ class _SecureVaultScreenState extends State<SecureVaultScreen> {
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("✅ All emergency recording and location sharing stopped. You are marked as safe."),
+          content: Text(" All emergency recording and location sharing stopped. You are marked as safe."),
           backgroundColor: Colors.green,
           duration: Duration(seconds: 3),
         ),
@@ -868,7 +868,7 @@ class _SecureVaultScreenState extends State<SecureVaultScreen> {
       
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("❌ Error stopping recording: $e")),
+        SnackBar(content: Text(" Error stopping recording: $e")),
       );
     }
   }

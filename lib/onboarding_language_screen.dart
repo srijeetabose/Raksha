@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:raksha/onboarding_voice_screen.dart';
@@ -14,18 +14,18 @@ class _OnboardingLanguageScreenState extends State<OnboardingLanguageScreen> {
   bool _saving = false;
 
   static const _languages = [
-    {'name': 'English', 'native': 'English', 'code': 'en-IN', 'flag': '🇮🇳'},
-    {'name': 'Hindi', 'native': 'हिन्दी', 'code': 'hi-IN', 'flag': '🇮🇳'},
-    {'name': 'Bengali', 'native': 'বাংলা', 'code': 'bn-IN', 'flag': '🇮🇳'},
-    {'name': 'Tamil', 'native': 'தமிழ்', 'code': 'ta-IN', 'flag': '🇮🇳'},
-    {'name': 'Telugu', 'native': 'తెలుగు', 'code': 'te-IN', 'flag': '🇮🇳'},
-    {'name': 'Kannada', 'native': 'ಕನ್ನಡ', 'code': 'kn-IN', 'flag': '🇮🇳'},
-    {'name': 'Malayalam', 'native': 'മലയാളം', 'code': 'ml-IN', 'flag': '🇮🇳'},
-    {'name': 'Marathi', 'native': 'मराठी', 'code': 'mr-IN', 'flag': '🇮🇳'},
-    {'name': 'Gujarati', 'native': 'ગુજરાતી', 'code': 'gu-IN', 'flag': '🇮🇳'},
-    {'name': 'Punjabi', 'native': 'ਪੰਜਾਬੀ', 'code': 'pa-IN', 'flag': '🇮🇳'},
-    {'name': 'Odia', 'native': 'ଓଡ଼ିଆ', 'code': 'or-IN', 'flag': '🇮🇳'},
-    {'name': 'Urdu', 'native': 'اردو', 'code': 'ur-IN', 'flag': '🇮🇳'},
+    {'name': 'English', 'native': 'English', 'code': 'en-IN', 'flag': '��'},
+    {'name': 'Hindi', 'native': 'हिन्दी', 'code': 'hi-IN', 'flag': '��'},
+    {'name': 'Bengali', 'native': 'বাংলা', 'code': 'bn-IN', 'flag': '��'},
+    {'name': 'Tamil', 'native': 'தமிழ்', 'code': 'ta-IN', 'flag': '��'},
+    {'name': 'Telugu', 'native': 'తెలుగు', 'code': 'te-IN', 'flag': '��'},
+    {'name': 'Kannada', 'native': 'ಕನ್ನಡ', 'code': 'kn-IN', 'flag': '��'},
+    {'name': 'Malayalam', 'native': 'മലയാളം', 'code': 'ml-IN', 'flag': '��'},
+    {'name': 'Marathi', 'native': 'मराठी', 'code': 'mr-IN', 'flag': '��'},
+    {'name': 'Gujarati', 'native': 'ગુજરાતી', 'code': 'gu-IN', 'flag': '��'},
+    {'name': 'Punjabi', 'native': 'ਪੰਜਾਬੀ', 'code': 'pa-IN', 'flag': '��'},
+    {'name': 'Odia', 'native': 'ଓଡ଼ିଆ', 'code': 'or-IN', 'flag': '��'},
+    {'name': 'Urdu', 'native': 'اردو', 'code': 'ur-IN', 'flag': '��'},
   ];
 
   Future<void> _saveAndContinue() async {
@@ -80,7 +80,7 @@ class _OnboardingLanguageScreenState extends State<OnboardingLanguageScreen> {
                         color: Colors.white.withOpacity(0.2),
                         shape: BoxShape.circle,
                       ),
-                      child: const Text('🌐', style: TextStyle(fontSize: 40)),
+                      child: const Text('', style: TextStyle(fontSize: 40)),
                     ),
                     const SizedBox(height: 24),
                     const Text(

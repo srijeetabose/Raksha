@@ -1,4 +1,4 @@
-package com.example.raksha
+﻿package com.example.raksha
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -38,7 +38,7 @@ class StealthRecordingService : Service() {
         super.onCreate()
         createNotificationChannel()
         startForeground(NOTIFICATION_ID, createNotification())
-        Log.d(TAG, "✅ StealthRecordingService created")
+        Log.d(TAG, " StealthRecordingService created")
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -64,8 +64,8 @@ class StealthRecordingService : Service() {
             audioFilePath = File(secureVaultDir, "${recordingId}_audio.m4a").absolutePath
             videoFilePath = File(secureVaultDir, "${recordingId}_video.mp4").absolutePath
 
-            Log.d(TAG, "📁 Audio: $audioFilePath")
-            Log.d(TAG, "📁 Video: $videoFilePath")
+            Log.d(TAG, " Audio: $audioFilePath")
+            Log.d(TAG, " Video: $videoFilePath")
 
             // Start audio recording
             startAudioRecording()
@@ -76,9 +76,9 @@ class StealthRecordingService : Service() {
             // Save metadata
             saveMetadataToFirebase(timestamp)
 
-            Log.d(TAG, "✅ Recording started")
+            Log.d(TAG, " Recording started")
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error starting recording: ${e.message}")
+            Log.e(TAG, " Error starting recording: ${e.message}")
         }
     }
 
@@ -99,10 +99,10 @@ class StealthRecordingService : Service() {
                 setOutputFile(audioFilePath)
                 prepare()
                 start()
-                Log.d(TAG, "✅ Audio recording started")
+                Log.d(TAG, " Audio recording started")
             }
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Audio recording error: ${e.message}")
+            Log.e(TAG, " Audio recording error: ${e.message}")
         }
     }
 
@@ -112,14 +112,14 @@ class StealthRecordingService : Service() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 if (checkSelfPermission(android.Manifest.permission.CAMERA)
                     != android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                    Log.e(TAG, "❌ Camera permission not granted")
+                    Log.e(TAG, " Camera permission not granted")
                     return
                 }
             }
 
             val cameraId = getFrontOrBackCameraId()
             if (cameraId == null) {
-                Log.e(TAG, "❌ No camera found")
+                Log.e(TAG, " No camera found")
                 return
             }
 
@@ -172,13 +172,13 @@ class StealthRecordingService : Service() {
                                             }.build()
                                             session.setRepeatingRequest(captureRequest, null, null)
                                             mediaRecorder?.start()
-                                            Log.d(TAG, "✅ Video recording started")
+                                            Log.d(TAG, " Video recording started")
                                         } catch (e: Exception) {
-                                            Log.e(TAG, "❌ Failed to start video: ${e.message}")
+                                            Log.e(TAG, " Failed to start video: ${e.message}")
                                         }
                                     }
                                     override fun onConfigureFailed(session: android.hardware.camera2.CameraCaptureSession) {
-                                        Log.e(TAG, "❌ Camera session config failed")
+                                        Log.e(TAG, " Camera session config failed")
                                     }
                                 }
                             )
@@ -195,31 +195,31 @@ class StealthRecordingService : Service() {
                                         }.build()
                                         session.setRepeatingRequest(captureRequest, null, null)
                                         mediaRecorder?.start()
-                                        Log.d(TAG, "✅ Video recording started (legacy)")
+                                        Log.d(TAG, " Video recording started (legacy)")
                                     } catch (e: Exception) {
-                                        Log.e(TAG, "❌ Failed to start video: ${e.message}")
+                                        Log.e(TAG, " Failed to start video: ${e.message}")
                                     }
                                 }
                                 override fun onConfigureFailed(session: android.hardware.camera2.CameraCaptureSession) {
-                                    Log.e(TAG, "❌ Camera session config failed")
+                                    Log.e(TAG, " Camera session config failed")
                                 }
                             }, null)
                         }
                     } catch (e: Exception) {
-                        Log.e(TAG, "❌ Camera setup error: ${e.message}")
+                        Log.e(TAG, " Camera setup error: ${e.message}")
                     }
                 }
                 override fun onDisconnected(camera: android.hardware.camera2.CameraDevice) {
                     camera.close()
                 }
                 override fun onError(camera: android.hardware.camera2.CameraDevice, error: Int) {
-                    Log.e(TAG, "❌ Camera error: $error")
+                    Log.e(TAG, " Camera error: $error")
                     camera.close()
                 }
             }, null)
 
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Video recording error: ${e.message}")
+            Log.e(TAG, " Video recording error: ${e.message}")
         }
     }
 
@@ -244,7 +244,7 @@ class StealthRecordingService : Service() {
         try {
             audioRecorder?.apply { stop(); release() }
             audioRecorder = null
-            Log.d(TAG, "✅ Audio stopped")
+            Log.d(TAG, " Audio stopped")
         } catch (e: Exception) {
             Log.e(TAG, "Audio stop error: ${e.message}")
         }
@@ -259,7 +259,7 @@ class StealthRecordingService : Service() {
         try {
             mediaRecorder?.apply { stop(); release() }
             mediaRecorder = null
-            Log.d(TAG, "✅ Video stopped")
+            Log.d(TAG, " Video stopped")
         } catch (e: Exception) {
             Log.e(TAG, "Video stop error: ${e.message}")
         }
@@ -290,8 +290,8 @@ class StealthRecordingService : Service() {
                 .collection("users").document(userId)
                 .collection("secureVaultRecordings").document(recordingId!!)
                 .set(data)
-                .addOnSuccessListener { Log.d(TAG, "✅ Metadata saved") }
-                .addOnFailureListener { Log.e(TAG, "❌ Metadata save failed: ${it.message}") }
+                .addOnSuccessListener { Log.d(TAG, " Metadata saved") }
+                .addOnFailureListener { Log.e(TAG, " Metadata save failed: ${it.message}") }
         } catch (e: Exception) {
             Log.e(TAG, "Metadata error: ${e.message}")
         }

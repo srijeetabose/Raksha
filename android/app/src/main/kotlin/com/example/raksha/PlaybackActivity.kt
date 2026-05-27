@@ -1,4 +1,4 @@
-package com.example.raksha
+﻿package com.example.raksha
 
 import android.media.MediaPlayer
 import android.net.Uri
@@ -22,7 +22,7 @@ class PlaybackActivity : AppCompatActivity() {
         val videoPath = intent.getStringExtra("videoPath")
         val gesture = intent.getStringExtra("gesture") ?: "Unknown"
         
-        Log.d("PlaybackActivity", "🎵 ========== PLAYBACK ACTIVITY ==========")
+        Log.d("PlaybackActivity", "� ========== PLAYBACK ACTIVITY ==========")
         Log.d("PlaybackActivity", "Audio path: $audioPath")
         Log.d("PlaybackActivity", "Video path: $videoPath")
         Log.d("PlaybackActivity", "Gesture: $gesture")
@@ -36,16 +36,16 @@ class PlaybackActivity : AppCompatActivity() {
         
         when {
             videoFile?.exists() == true -> {
-                Log.d("PlaybackActivity", "📹 Playing video: ${videoFile.absolutePath}")
+                Log.d("PlaybackActivity", " Playing video: ${videoFile.absolutePath}")
                 playVideo(videoFile)
             }
             audioFile?.exists() == true -> {
-                Log.d("PlaybackActivity", "🎵 Playing audio: ${audioFile.absolutePath}")
+                Log.d("PlaybackActivity", "� Playing audio: ${audioFile.absolutePath}")
                 playAudio(audioFile)
             }
             else -> {
-                Log.e("PlaybackActivity", "❌ No valid recording files found")
-                Toast.makeText(this, "❌ Recording file not found", Toast.LENGTH_LONG).show()
+                Log.e("PlaybackActivity", " No valid recording files found")
+                Toast.makeText(this, " Recording file not found", Toast.LENGTH_LONG).show()
                 finish()
             }
         }
@@ -67,26 +67,26 @@ class PlaybackActivity : AppCompatActivity() {
             
             // Start playing
             videoView?.setOnPreparedListener { mp ->
-                Log.d("PlaybackActivity", "✅ Video prepared, starting playback")
+                Log.d("PlaybackActivity", " Video prepared, starting playback")
                 mp.start()
             }
             
             videoView?.setOnErrorListener { mp, what, extra ->
-                Log.e("PlaybackActivity", "❌ Video error: what=$what, extra=$extra")
+                Log.e("PlaybackActivity", " Video error: what=$what, extra=$extra")
                 Toast.makeText(this, "Error playing video: $what", Toast.LENGTH_LONG).show()
                 finish()
                 true
             }
             
             videoView?.setOnCompletionListener {
-                Log.d("PlaybackActivity", "✅ Video playback completed")
+                Log.d("PlaybackActivity", " Video playback completed")
                 finish()
             }
             
-            Log.d("PlaybackActivity", "✅ Video player initialized")
+            Log.d("PlaybackActivity", " Video player initialized")
             
         } catch (e: Exception) {
-            Log.e("PlaybackActivity", "❌ Error playing video: ${e.message}")
+            Log.e("PlaybackActivity", " Error playing video: ${e.message}")
             e.printStackTrace()
             Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_LONG).show()
             finish()
@@ -101,7 +101,7 @@ class PlaybackActivity : AppCompatActivity() {
             layout.setPadding(50, 50, 50, 50)
             
             val titleText = android.widget.TextView(this)
-            titleText.text = "🎵 Playing Audio Recording"
+            titleText.text = "� Playing Audio Recording"
             titleText.textSize = 20f
             titleText.setPadding(0, 0, 0, 30)
             layout.addView(titleText)
@@ -123,19 +123,19 @@ class PlaybackActivity : AppCompatActivity() {
                 setDataSource(audioFile.absolutePath)
                 
                 setOnPreparedListener {
-                    Log.d("PlaybackActivity", "✅ Audio prepared, starting playback")
+                    Log.d("PlaybackActivity", " Audio prepared, starting playback")
                     statusText.text = "Playing... Duration: ${duration / 1000}s"
                     start()
                 }
                 
                 setOnCompletionListener {
-                    Log.d("PlaybackActivity", "✅ Audio playback completed")
+                    Log.d("PlaybackActivity", " Audio playback completed")
                     statusText.text = "Playback completed"
-                    Toast.makeText(this@PlaybackActivity, "✅ Playback completed", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@PlaybackActivity, " Playback completed", Toast.LENGTH_SHORT).show()
                 }
                 
                 setOnErrorListener { mp, what, extra ->
-                    Log.e("PlaybackActivity", "❌ Audio error: what=$what, extra=$extra")
+                    Log.e("PlaybackActivity", " Audio error: what=$what, extra=$extra")
                     statusText.text = "Error playing audio"
                     Toast.makeText(this@PlaybackActivity, "Error: $what", Toast.LENGTH_LONG).show()
                     true
@@ -144,10 +144,10 @@ class PlaybackActivity : AppCompatActivity() {
                 prepareAsync()
             }
             
-            Log.d("PlaybackActivity", "✅ Audio player initialized")
+            Log.d("PlaybackActivity", " Audio player initialized")
             
         } catch (e: Exception) {
-            Log.e("PlaybackActivity", "❌ Error playing audio: ${e.message}")
+            Log.e("PlaybackActivity", " Error playing audio: ${e.message}")
             e.printStackTrace()
             Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_LONG).show()
             finish()
@@ -159,6 +159,6 @@ class PlaybackActivity : AppCompatActivity() {
         mediaPlayer?.release()
         mediaPlayer = null
         videoView = null
-        Log.d("PlaybackActivity", "🛑 Playback activity destroyed")
+        Log.d("PlaybackActivity", " Playback activity destroyed")
     }
 }

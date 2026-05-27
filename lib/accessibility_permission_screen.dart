@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class AccessibilityPermissionScreen extends StatefulWidget {
@@ -130,8 +130,8 @@ class _AccessibilityPermissionScreenState extends State<AccessibilityPermissionS
                       Expanded(
                         child: Text(
                           _isEnabled 
-                              ? '✅ Accessibility Service Enabled\nVoice detection is active!'
-                              : '❌ Accessibility Service Disabled\nVoice detection won\'t work',
+                              ? ' Accessibility Service Enabled\nVoice detection is active!'
+                              : ' Accessibility Service Disabled\nVoice detection won\'t work',
                           style: const TextStyle(
                             fontSize: 14,
                             color: Colors.white,

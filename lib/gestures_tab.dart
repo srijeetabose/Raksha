@@ -1,4 +1,4 @@
-// lib/gestures_tab.dart
+﻿// lib/gestures_tab.dart
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -18,9 +18,9 @@ class GesturesTab extends StatefulWidget {
 class _GesturesTabState extends State<GesturesTab> {
   // Available Gestures (These MUST match the MediaPipe TFLite model labels)
   final List<Map<String, dynamic>> availableGestures = [
-    {'name': 'Thumbs Up', 'icon': Icons.thumb_up, 'key': 'Thumb_Up', 'selected': false, 'emoji': '👍'},
-    {'name': 'Thumbs Down', 'icon': Icons.thumb_down, 'key': 'Thumb_Down', 'selected': false, 'emoji': '👎'},
-    {'name': 'Peace Sign', 'icon': Icons.pan_tool, 'key': 'Victory', 'selected': false, 'emoji': '✌️'},
+    {'name': 'Thumbs Up', 'icon': Icons.thumb_up, 'key': 'Thumb_Up', 'selected': false, 'emoji': '�'},
+    {'name': 'Thumbs Down', 'icon': Icons.thumb_down, 'key': 'Thumb_Down', 'selected': false, 'emoji': '�'},
+    {'name': 'Peace Sign', 'icon': Icons.pan_tool, 'key': 'Victory', 'selected': false, 'emoji': '✌'},
     {'name': 'Closed Fist', 'icon': Icons.back_hand, 'key': 'Closed_Fist', 'selected': false, 'emoji': '✊'},
   ];
   
@@ -53,7 +53,7 @@ class _GesturesTabState extends State<GesturesTab> {
 
   @override
   void dispose() {
-    print("🧹 Disposing GesturesTab - cleaning up resources");
+    // debug removed
     _gestureDetectionTimer?.cancel();
     _cameraController?.dispose();
     super.dispose();
@@ -68,23 +68,23 @@ class _GesturesTabState extends State<GesturesTab> {
         final confidence = call.arguments['confidence'] as double;
         
         if (confidence > 0.8) {
-          print("🚨 EMERGENCY: Selected gesture detected with high confidence: $gesture (${(confidence * 100).toInt()}%)");
+          // debug removed
           _triggerAutomaticSOS(gesture);
         } else {
-          print("🎯 Selected gesture detected but lower confidence: $gesture (${(confidence * 100).toInt()}%)");
+          // debug removed
         }
       } else if (call.method == 'onVoiceTriggerDetected') {
         final trigger = call.arguments['trigger'] as String;
         final source = call.arguments['source'] as String? ?? 'voice';
         
-        print("🚨 VOICE TRIGGER DETECTED: $trigger from $source");
+        // debug removed
         
         // Show immediate voice trigger detection message
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                "🎤 VOICE TRIGGER DETECTED: \"$trigger\"",
+                " VOICE TRIGGER DETECTED: \"$trigger\"",
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
@@ -105,7 +105,7 @@ class _GesturesTabState extends State<GesturesTab> {
           
           // Update UI to show voice detection
           setState(() {
-            _currentGesture = "🎤 VOICE EMERGENCY: $trigger";
+            _currentGesture = " VOICE EMERGENCY: $trigger";
             _confidence = 1.0;
             _isDetecting = true;
           });
@@ -120,14 +120,14 @@ class _GesturesTabState extends State<GesturesTab> {
   // SIMPLE Camera initialization - NO CONFLICTS
   Future<void> _initializeCamera() async {
     try {
-      print("🎥 Starting SIMPLE camera initialization...");
+      // debug removed
       
       // Get available cameras
       final cameras = await availableCameras();
-      print("📱 Found ${cameras.length} cameras");
+      // debug removed
       
       if (cameras.isEmpty) {
-        print("❌ No cameras available");
+        // debug removed
         if (mounted) {
           setState(() {
             _currentGesture = "No cameras available";
@@ -145,7 +145,7 @@ class _GesturesTabState extends State<GesturesTab> {
         }
       }
       
-      print("📷 Selected camera: ${selectedCamera.name} (${selectedCamera.lensDirection})");
+      // debug removed
       
       // Dispose existing controller if any
       await _cameraController?.dispose();
@@ -163,20 +163,20 @@ class _GesturesTabState extends State<GesturesTab> {
       if (mounted) {
         setState(() {
           _isCameraInitialized = true;
-          _currentGesture = "✅ Camera ready - Monitoring for gestures...";
+          _currentGesture = " Camera ready - Monitoring for gestures...";
         });
-        print("✅ Camera initialized successfully!");
+        // debug removed
         
         // Start gesture detection communication (NO native camera conflicts)
         _startGestureDetectionCommunication();
       }
       
     } catch (e) {
-      print("❌ Camera initialization failed: $e");
+      // debug removed
       if (mounted) {
         setState(() {
           _isCameraInitialized = false;
-          _currentGesture = "❌ Camera error: $e";
+          _currentGesture = " Camera error: $e";
         });
       }
     }
@@ -192,31 +192,31 @@ class _GesturesTabState extends State<GesturesTab> {
         final gesture = result['gesture'] as String?;
         final confidence = result['confidence'] as double?;
         
-        print("📥 Gesture check: $gesture (confidence: $confidence)");
+        // debug removed
         
         if (gesture != null && gesture != "None" && confidence != null && confidence > 0.3) {
           setState(() {
-            _currentGesture = "✅ DETECTED: $gesture";
+            _currentGesture = " DETECTED: $gesture";
             _confidence = confidence;
             _isDetecting = true;
           });
           
-          print("🎯 REAL GESTURE DETECTED: $gesture (${(confidence * 100).toInt()}%)");
+          // debug removed
           
           // Clear the result after processing
           await platform.invokeMethod('clearGestureResult');
           
           // Check if it's an emergency gesture
           if (_selectedKeys.contains(gesture)) {
-            print("🚨 EMERGENCY GESTURE MATCH: $gesture");
+            // debug removed
             setState(() {
-              _currentGesture = "🚨 EMERGENCY: $gesture";
+              _currentGesture = " EMERGENCY: $gesture";
             });
             _triggerAutomaticSOS(gesture);
           } else {
-            print("ℹ️ Gesture detected but not selected for emergency: $gesture");
+            // debug removed
             setState(() {
-              _currentGesture = "👋 Saw: $gesture (not emergency)";
+              _currentGesture = " Saw: $gesture (not emergency)";
             });
           }
           
@@ -225,7 +225,7 @@ class _GesturesTabState extends State<GesturesTab> {
             if (mounted) {
               setState(() {
                 _isDetecting = false;
-                _currentGesture = '🔍 Watching for gestures...';
+                _currentGesture = ' Watching for gestures...';
                 _confidence = 0.0;
               });
             }
@@ -234,16 +234,16 @@ class _GesturesTabState extends State<GesturesTab> {
           // Show that we're actively looking
           if (!_isDetecting && mounted) {
             setState(() {
-              _currentGesture = '👁️ Looking for gestures...';
+              _currentGesture = ' Looking for gestures...';
             });
           }
         }
       }
     } catch (e) {
-      print("❌ Error checking gesture results: $e");
+      // debug removed
       if (mounted) {
         setState(() {
-          _currentGesture = "❌ Detection error: $e";
+          _currentGesture = " Detection error: $e";
         });
       }
     }
@@ -251,7 +251,7 @@ class _GesturesTabState extends State<GesturesTab> {
   
   // WORKING gesture detection communication
   void _startGestureDetectionCommunication() {
-    print("🎯 Starting WORKING gesture detection communication...");
+    // debug removed
     
     // Initialize MediaPipe processing
     _initializeMediaPipe();
@@ -266,7 +266,7 @@ class _GesturesTabState extends State<GesturesTab> {
       _testGestureDetection();
     });
     
-    print("✅ WORKING gesture detection communication active!");
+    // debug removed
   }
   
   // Build camera preview with proper error handling
@@ -344,7 +344,7 @@ class _GesturesTabState extends State<GesturesTab> {
           Container(
             decoration: BoxDecoration(
               border: Border.all(
-                color: _selectedKeys.contains(_currentGesture.replaceAll('✅ DETECTED: ', '').replaceAll('🚨 EMERGENCY: ', '').replaceAll('🧪 TESTING: ', '')) 
+                color: _selectedKeys.contains(_currentGesture.replaceAll(' DETECTED: ', '').replaceAll(' EMERGENCY: ', '').replaceAll(' TESTING: ', '')) 
                   ? Colors.red 
                   : Colors.green,
                 width: 4,
@@ -404,9 +404,9 @@ class _GesturesTabState extends State<GesturesTab> {
     try {
       const platform = MethodChannel('com.example.raksha/gesture_service');
       await platform.invokeMethod('startMediaPipeProcessing');
-      print("✅ MediaPipe initialized WITHOUT native camera");
+      // debug removed
     } catch (e) {
-      print("❌ MediaPipe initialization failed: $e");
+      // debug removed
     }
   }
   
@@ -417,7 +417,7 @@ class _GesturesTabState extends State<GesturesTab> {
       final XFile imageFile = await _cameraController!.takePicture();
       final bytes = await imageFile.readAsBytes();
       
-      print("📸 Captured image: ${bytes.length} bytes");
+      // debug removed
       
       // Send to MediaPipe for processing
       const platform = MethodChannel('com.example.raksha/gesture_service');
@@ -427,12 +427,12 @@ class _GesturesTabState extends State<GesturesTab> {
         'height': _cameraController!.value.previewSize?.height.toInt() ?? 480,
       });
       
-      print("🎯 MediaPipe processing result: $result");
+      // debug removed
       
       // The actual gesture result will come through the gesture listener
       
     } catch (e) {
-      print("❌ Real camera processing failed: $e");
+      // debug removed
     }
   }
   
@@ -442,7 +442,7 @@ class _GesturesTabState extends State<GesturesTab> {
 
     setState(() {
       if (!_isDetecting) {
-        _currentGesture = "🔍 Scanning for gestures... (${_selectedKeys.length} selected)";
+        _currentGesture = " Scanning for gestures... (${_selectedKeys.length} selected)";
       }
     });
   }
@@ -454,7 +454,7 @@ class _GesturesTabState extends State<GesturesTab> {
     }
     
     try {
-      print("🎯 REAL gesture detection - processing camera frame...");
+      // debug removed
       
       // Method 1: Process real camera frame through MediaPipe
       await _processRealCameraFrame();
@@ -466,17 +466,17 @@ class _GesturesTabState extends State<GesturesTab> {
       _updateDetectionStatus();
       
     } catch (e) {
-      print("❌ Error in real gesture detection: $e");
+      // debug removed
     }
   }
 
   // COMPLETE SOS sequence with notifications, countdown, vibration, and secure vault recording
   void _triggerAutomaticSOS(String gestureName) async {
     try {
-      print("🚨 CROSS-APP EMERGENCY DETECTED: $gestureName");
+      // debug removed
       
       if (!mounted) {
-        print("🛑 Widget unmounted - cancelling SOS sequence");
+        // debug removed
         return;
       }
       
@@ -484,7 +484,7 @@ class _GesturesTabState extends State<GesturesTab> {
       const sosChannel = MethodChannel('com.raksha/sos_service');
       
       // PHASE 0: Start secure vault recording IMMEDIATELY
-      print("🎥 PHASE 0: Starting SECURE VAULT recording immediately");
+      // debug removed
       try {
         await sosChannel.invokeMethod('startEmergencyRecording', {
           'gesture': gestureName,
@@ -493,27 +493,27 @@ class _GesturesTabState extends State<GesturesTab> {
           'recordVideo': true,
           'saveToSecureVault': true,
         });
-        print("✅ Secure vault recording started");
+        // debug removed
       } catch (e) {
-        print("❌ Secure vault recording failed: $e");
+        // debug removed
       }
       
       // PHASE 1: Show 10-second countdown NOTIFICATION (works across all apps)
-      print("🚨 PHASE 1: Starting 10-second countdown NOTIFICATION");
+      // debug removed
       await platform.invokeMethod('showSOSCountdownNotification', {
         'gesture': gestureName,
         'countdown': 10,
       });
       
       // Wait 10 seconds - user can cancel via notification
-      print("⏰ Waiting 10 seconds for countdown...");
+      // debug removed
       await Future.delayed(const Duration(seconds: 10));
       
       // Check if cancelled (this would be set by notification action)
       // For now, continue to next phase
       
       // PHASE 2: Start 7-second vibration with notification
-      print("🚨 PHASE 2: Starting 7-second vibration phase");
+      // debug removed
       
       if (mounted) {
         setState(() {
@@ -541,7 +541,7 @@ class _GesturesTabState extends State<GesturesTab> {
       }
       
       if (vibrationCancelled) {
-        print("🛑 Emergency cancelled during vibration phase");
+        // debug removed
         await platform.invokeMethod('stopEmergencyVibration');
         await _stopSecureVaultRecording();
         return;
@@ -551,11 +551,11 @@ class _GesturesTabState extends State<GesturesTab> {
       await platform.invokeMethod('stopEmergencyVibration');
       
       // PHASE 3: Trigger real SOS (recording continues)
-      print("🚨 PHASE 3: TRIGGERING REAL SOS - RECORDING CONTINUES");
+      // debug removed
       await _triggerRealSOS(gestureName);
       
     } catch (e) {
-      print("❌ Error in SOS sequence: $e");
+      // debug removed
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("SOS Error: $e")),
@@ -576,9 +576,9 @@ class _GesturesTabState extends State<GesturesTab> {
     try {
       const sosChannel = MethodChannel('com.raksha/sos_service');
       await sosChannel.invokeMethod('stopEmergencyRecording');
-      print("🛑 Secure vault recording stopped");
+      // debug removed
     } catch (e) {
-      print("❌ Error stopping secure vault recording: $e");
+      // debug removed
     }
   }
 
@@ -609,7 +609,7 @@ class _GesturesTabState extends State<GesturesTab> {
           return AlertDialog(
             backgroundColor: Colors.red,
             title: const Text(
-              "🚨 EMERGENCY DETECTED",
+              " EMERGENCY DETECTED",
               style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
@@ -683,7 +683,7 @@ class _GesturesTabState extends State<GesturesTab> {
       builder: (context) => AlertDialog(
         backgroundColor: Colors.orange,
         title: const Text(
-          "🚨 7-SECOND VIBRATION PHASE",
+          " 7-SECOND VIBRATION PHASE",
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         content: Text(
@@ -710,32 +710,32 @@ class _GesturesTabState extends State<GesturesTab> {
   // FIXED: Trigger the actual SOS sequence with mounted checks
   Future<void> _triggerRealSOS(String gestureName) async {
     try {
-      print("🚨 TRIGGERING REAL SOS SEQUENCE FOR: $gestureName");
+      // debug removed
       
       if (!mounted) {
-        print("🛑 Widget unmounted - stopping SOS sequence");
+        // debug removed
         return;
       }
       
       const platform = MethodChannel('com.example.raksha/gesture_service');
       
       // 0. Check if emergency contacts exist first
-      print("📋 Checking emergency contacts...");
+      // debug removed
       final contactCheck = await platform.invokeMethod('checkEmergencyContacts');
-      print("📋 Contact check result: $contactCheck");
+      // debug removed
       
       final hasContacts = contactCheck['hasContacts'] as bool? ?? false;
       final contactCount = contactCheck['contactCount'] as int? ?? 0;
       
       if (!hasContacts) {
-        print("❌ NO EMERGENCY CONTACTS FOUND!");
+        // debug removed
         if (mounted) {
           setState(() {
-            _currentGesture = "❌ No emergency contacts! Add contacts first.";
+            _currentGesture = " No emergency contacts! Add contacts first.";
           });
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text("❌ No emergency contacts found! Please add contacts in the Contacts tab first."),
+              content: Text(" No emergency contacts found! Please add contacts in the Contacts tab first."),
               backgroundColor: Colors.red,
               duration: Duration(seconds: 5),
             ),
@@ -745,7 +745,7 @@ class _GesturesTabState extends State<GesturesTab> {
       }
       
       // 1. Send SMS to emergency contacts immediately (most important)
-      print("📱 Sending emergency SMS to $contactCount contacts...");
+      // debug removed
       const sosChannel = MethodChannel('com.raksha/sos_service');
       
       try {
@@ -753,28 +753,28 @@ class _GesturesTabState extends State<GesturesTab> {
           'gesture': gestureName,
           'message': 'I need help! Please call me immediately!',
         });
-        print("✅ SMS sending command completed");
+        // debug removed
       } catch (e) {
-        print("❌ SMS sending failed: $e");
+        // debug removed
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("❌ SMS failed: $e")),
+            SnackBar(content: Text(" SMS failed: $e")),
           );
         }
       }
       
       // 2. Start location sharing
-      print("📍 Starting location sharing...");
+      // debug removed
       try {
         await platform.invokeMethod('startLocationSharing', {
           'gesture': gestureName,
         });
       } catch (e) {
-        print("⚠️ Location sharing failed: $e");
+        // debug removed
       }
       
       // 3. Start emergency recording (CRITICAL)
-      print("🎥 Starting emergency audio/video recording...");
+      // debug removed
       try {
         await sosChannel.invokeMethod('startEmergencyRecording', {
           'gesture': gestureName,
@@ -783,12 +783,12 @@ class _GesturesTabState extends State<GesturesTab> {
           'recordVideo': true,
           'saveToSecureVault': true,
         });
-        print("✅ Emergency recording started");
+        // debug removed
       } catch (e) {
-        print("❌ Emergency recording failed: $e");
+        // debug removed
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("⚠️ Recording failed: $e")),
+            SnackBar(content: Text(" Recording failed: $e")),
           );
         }
       }
@@ -798,24 +798,24 @@ class _GesturesTabState extends State<GesturesTab> {
         setState(() {
           _isLocationSharing = true;
           _emergencyActive = true;
-          _currentGesture = "🚨 EMERGENCY ACTIVE: $gestureName";
+          _currentGesture = " EMERGENCY ACTIVE: $gestureName";
         });
         
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("🚨 EMERGENCY SOS ACTIVATED! SMS sent to contacts."),
+            content: Text(" EMERGENCY SOS ACTIVATED! SMS sent to contacts."),
             backgroundColor: Colors.red,
             duration: Duration(seconds: 5),
           ),
         );
       }
       
-      print("✅ Real SOS sequence initiated successfully");
+      // debug removed
     } catch (e) {
-      print("❌ Error triggering real SOS: $e");
+      // debug removed
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("❌ SOS Error: $e")),
+          SnackBar(content: Text(" SOS Error: $e")),
         );
       }
     }
@@ -824,7 +824,7 @@ class _GesturesTabState extends State<GesturesTab> {
   // Stop location sharing - FIXED
   Future<void> _stopLocationSharing() async {
     try {
-      print("🛑 Stopping location sharing...");
+      // debug removed
       
       const platform = MethodChannel('com.example.raksha/gesture_service');
       await platform.invokeMethod('stopLocationSharing');
@@ -833,23 +833,23 @@ class _GesturesTabState extends State<GesturesTab> {
         setState(() {
           _isLocationSharing = false;
           _emergencyActive = false;
-          _currentGesture = "🛑 Emergency stopped - Location sharing disabled";
+          _currentGesture = " Emergency stopped - Location sharing disabled";
         });
         
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("🛑 Location sharing stopped"),
+            content: Text(" Location sharing stopped"),
             backgroundColor: Colors.green,
           ),
         );
       }
       
-      print("✅ Location sharing stopped successfully");
+      // debug removed
     } catch (e) {
-      print("❌ Error stopping location sharing: $e");
+      // debug removed
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("❌ Error stopping location: $e")),
+          SnackBar(content: Text(" Error stopping location: $e")),
         );
       }
     }
@@ -864,13 +864,13 @@ class _GesturesTabState extends State<GesturesTab> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("🛑 SOS Cancelled"),
+            content: Text(" SOS Cancelled"),
             backgroundColor: Colors.green,
           ),
         );
       }
     } catch (e) {
-      print("❌ Error cancelling SOS: $e");
+      // debug removed
     }
   }
   
@@ -888,14 +888,14 @@ class _GesturesTabState extends State<GesturesTab> {
       
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("🛑 Emergency SOS cancelled during vibration phase"),
+          content: Text(" Emergency SOS cancelled during vibration phase"),
           backgroundColor: Colors.green,
         ),
       );
       
-      print("🛑 SOS cancelled during vibration phase");
+      // debug removed
     } catch (e) {
-      print("❌ Error cancelling SOS during vibration: $e");
+      // debug removed
     }
   }
 
@@ -917,7 +917,7 @@ class _GesturesTabState extends State<GesturesTab> {
         }
       }
     } catch (e) {
-      print("Error loading gestures: $e");
+      // debug removed
     }
   }
 
@@ -964,7 +964,7 @@ class _GesturesTabState extends State<GesturesTab> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("✅ CROSS-APP Emergency Detection Activated!\n🎤 Voice + 👋 Gesture detection now works across ALL apps!"),
+            content: Text(" CROSS-APP Emergency Detection Activated!\n Voice +  Gesture detection now works across ALL apps!"),
             duration: Duration(seconds: 5),
           ),
         );
@@ -984,7 +984,7 @@ class _GesturesTabState extends State<GesturesTab> {
   void _testSOSSystem() {
     if (_selectedKeys.isNotEmpty) {
       final testGesture = _selectedKeys.first;
-      print("🧪 TESTING SOS SYSTEM WITH: $testGesture");
+      // debug removed
       
       setState(() {
         _currentGesture = "TESTING: $testGesture";
@@ -1004,7 +1004,7 @@ class _GesturesTabState extends State<GesturesTab> {
       String? phoneNumber = await _showPhoneNumberDialog();
       
       if (phoneNumber != null && phoneNumber.isNotEmpty) {
-        print("🧪 Testing SMS to: $phoneNumber");
+        // debug removed
         
         const sosChannel = MethodChannel('com.raksha/sos_service');
         await sosChannel.invokeMethod('testSMSSystem', {
@@ -1013,15 +1013,15 @@ class _GesturesTabState extends State<GesturesTab> {
         
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("📱 Test SMS sent to $phoneNumber")),
+            SnackBar(content: Text(" Test SMS sent to $phoneNumber")),
           );
         }
       }
     } catch (e) {
-      print("❌ SMS test failed: $e");
+      // debug removed
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("❌ SMS test failed: $e")),
+          SnackBar(content: Text(" SMS test failed: $e")),
         );
       }
     }
@@ -1069,31 +1069,31 @@ class _GesturesTabState extends State<GesturesTab> {
     try {
       const platform = MethodChannel('com.example.raksha/gesture_service');
       
-      print("🌐 Starting CROSS-APP detection service...");
+      // debug removed
       
       // 1. Start accessibility service for cross-app monitoring
       await platform.invokeMethod('startAccessibilityService');
-      print("♿ Accessibility service started for cross-app detection");
+      // debug removed
       
       // 2. Start foreground service with cross-app capabilities
       await platform.invokeMethod('startRealBackgroundService', {
         'gestures': _selectedKeys,
         'crossApp': true,
       });
-      print("🚀 Cross-app gesture service started with gestures: $_selectedKeys");
+      // debug removed
       
       // 3. Voice detection is already started by user_safety_dashboard with correct triggers
       // Don't override it here with hardcoded words
-      print("🎤 Voice detection already running with user's saved triggers");
+      // debug removed
       
       // 4. Enable system-wide detection
       await platform.invokeMethod('enableSystemWideDetection');
-      print("🌍 System-wide detection enabled");
+      // debug removed
       
-      print("✅ COMPLETE cross-app detection system activated!");
+      // debug removed
       
     } catch (e) {
-      print("❌ Error starting cross-app detection: $e");
+      // debug removed
     }
   }
 
@@ -1236,7 +1236,7 @@ class _GesturesTabState extends State<GesturesTab> {
                             Icon(Icons.vibration, color: Colors.orange, size: 24),
                             SizedBox(width: 8),
                             Text(
-                              "📳 7-SECOND VIBRATION PHASE",
+                              " 7-SECOND VIBRATION PHASE",
                               style: TextStyle(
                                 color: Colors.orange,
                                 fontSize: 16,
@@ -1299,7 +1299,7 @@ class _GesturesTabState extends State<GesturesTab> {
                             Icon(Icons.location_on, color: Colors.red, size: 24),
                             SizedBox(width: 8),
                             Text(
-                              "🔴 LIVE LOCATION SHARING ACTIVE",
+                              "� LIVE LOCATION SHARING ACTIVE",
                               style: TextStyle(
                                 color: Colors.red,
                                 fontSize: 16,
@@ -1437,7 +1437,7 @@ class _GesturesTabState extends State<GesturesTab> {
                   width: double.infinity,
                   child: ElevatedButton.icon(
                     onPressed: _selectedKeys.length == 2 ? () {
-                      print("🧪 MANUAL SOS TEST");
+                      // debug removed
                       _triggerAutomaticSOS(_selectedKeys.first);
                     } : null,
                     icon: const Icon(Icons.warning, color: Colors.white),
@@ -1526,7 +1526,7 @@ class _GesturesTabState extends State<GesturesTab> {
   // Open secure vault with PIN protection
   void _openSecureVault() async {
     try {
-      print("🔒 Opening secure vault...");
+      // debug removed
       
       // Navigate to secure vault screen with PIN protection
       Navigator.of(context).push(
@@ -1536,10 +1536,10 @@ class _GesturesTabState extends State<GesturesTab> {
       );
       
     } catch (e) {
-      print("❌ Error opening secure vault: $e");
+      // debug removed
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("❌ Vault error: $e")),
+          SnackBar(content: Text(" Vault error: $e")),
         );
       }
     }
@@ -1548,7 +1548,7 @@ class _GesturesTabState extends State<GesturesTab> {
   // Test voice triggers
   void _testVoiceTriggers() async {
     try {
-      print("🎤 Testing voice triggers...");
+      // debug removed
       
       // Load user's actual saved triggers from Firebase
       final userId = FirebaseAuth.instance.currentUser?.uid;
@@ -1570,13 +1570,13 @@ class _GesturesTabState extends State<GesturesTab> {
       
       if (mounted) {
         setState(() {
-          _currentGesture = "🎤 Voice detection active - Say: 'help me', 'emergency', 'danger'";
+          _currentGesture = " Voice detection active - Say: 'help me', 'emergency', 'danger'";
         });
         
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text("🎤 Voice Triggers Active"),
+            title: const Text(" Voice Triggers Active"),
             content: const Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1605,10 +1605,10 @@ class _GesturesTabState extends State<GesturesTab> {
         );
       }
     } catch (e) {
-      print("❌ Voice trigger test failed: $e");
+      // debug removed
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("❌ Voice test failed: $e")),
+          SnackBar(content: Text(" Voice test failed: $e")),
         );
       }
     }

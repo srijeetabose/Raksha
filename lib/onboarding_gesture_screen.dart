@@ -1,4 +1,4 @@
-// lib/onboarding_gesture_screen.dart
+﻿// lib/onboarding_gesture_screen.dart
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -18,9 +18,9 @@ class OnboardingGestureScreen extends StatefulWidget {
 class _OnboardingGestureScreenState extends State<OnboardingGestureScreen> {
   // Available Gestures (Matching TFLite labels for selection)
   final List<Map<String, dynamic>> availableGestures = [
-    {'name': 'Thumbs Up', 'icon': Icons.thumb_up, 'key': 'Thumb_Up', 'selected': false, 'emoji': '👍'},
-    {'name': 'Thumbs Down', 'icon': Icons.thumb_down, 'key': 'Thumb_Down', 'selected': false, 'emoji': '👎'},
-    {'name': 'Peace Sign', 'icon': Icons.pan_tool, 'key': 'Victory', 'selected': false, 'emoji': '✌️'},
+    {'name': 'Thumbs Up', 'icon': Icons.thumb_up, 'key': 'Thumb_Up', 'selected': false, 'emoji': '�'},
+    {'name': 'Thumbs Down', 'icon': Icons.thumb_down, 'key': 'Thumb_Down', 'selected': false, 'emoji': '�'},
+    {'name': 'Peace Sign', 'icon': Icons.pan_tool, 'key': 'Victory', 'selected': false, 'emoji': '✌'},
     {'name': 'Closed Fist', 'icon': Icons.back_hand, 'key': 'Closed_Fist', 'selected': false, 'emoji': '✊'},
   ];
   
@@ -56,9 +56,9 @@ class _OnboardingGestureScreenState extends State<OnboardingGestureScreen> {
   // Initialize camera
   Future<void> _initializeCamera() async {
     try {
-      print("🎥 Initializing camera for onboarding...");
+      // debug removed
       _cameras = await availableCameras();
-      print("📱 Found ${_cameras?.length} cameras");
+      // debug removed
       
       if (_cameras != null && _cameras!.isNotEmpty) {
         // Use front camera for gesture detection
@@ -67,7 +67,7 @@ class _OnboardingGestureScreenState extends State<OnboardingGestureScreen> {
           orElse: () => _cameras!.first,
         );
         
-        print("📷 Using camera: ${frontCamera.name}");
+        // debug removed
         
         _cameraController = CameraController(
           frontCamera,
@@ -75,9 +75,9 @@ class _OnboardingGestureScreenState extends State<OnboardingGestureScreen> {
           enableAudio: false,
         );
         
-        print("🔄 Initializing camera controller...");
+        // debug removed
         await _cameraController!.initialize();
-        print("✅ Camera initialized successfully!");
+        // debug removed
         
         if (mounted) {
           setState(() {
@@ -87,10 +87,10 @@ class _OnboardingGestureScreenState extends State<OnboardingGestureScreen> {
           _startGestureDetectionDemo();
         }
       } else {
-        print("❌ No cameras available");
+        // debug removed
       }
     } catch (e) {
-      print('❌ Error initializing camera: $e');
+      print(' Error initializing camera: $e');
       // Try to reinitialize after delay
       if (mounted) {
         Future.delayed(const Duration(seconds: 3), () {
@@ -102,7 +102,7 @@ class _OnboardingGestureScreenState extends State<OnboardingGestureScreen> {
 
   // Start gesture detection demo for onboarding
   void _startGestureDetectionDemo() {
-    print("🎯 Starting REAL MediaPipe gesture detection...");
+    // debug removed
     
     // Initialize MediaPipe gesture recognition
     _initializeMediaPipeGestures();
@@ -118,7 +118,7 @@ class _OnboardingGestureScreenState extends State<OnboardingGestureScreen> {
         // Process current camera frame through MediaPipe
         await _processCurrentFrame();
       } catch (e) {
-        print("❌ Error processing gesture frame: $e");
+        // debug removed
       }
     });
   }
@@ -128,9 +128,9 @@ class _OnboardingGestureScreenState extends State<OnboardingGestureScreen> {
     try {
       final platform = MethodChannel('com.example.raksha/gesture_service');
       await platform.invokeMethod('initializeGestureRecognition');
-      print("✅ MediaPipe gesture recognition initialized");
+      // debug removed
     } catch (e) {
-      print("❌ Failed to initialize MediaPipe: $e");
+      // debug removed
     }
   }
 
@@ -150,7 +150,7 @@ class _OnboardingGestureScreenState extends State<OnboardingGestureScreen> {
           _isDetecting = confidence > 0.5;
         });
         
-        print("🎯 REAL MediaPipe detection: $gesture (${(confidence * 100).toInt()}%)");
+        // debug removed
       } else {
         setState(() {
           _currentGesture = 'No gesture detected';
@@ -159,7 +159,7 @@ class _OnboardingGestureScreenState extends State<OnboardingGestureScreen> {
         });
       }
     } catch (e) {
-      print("❌ Error processing frame: $e");
+      // debug removed
     }
   }
 
@@ -181,7 +181,7 @@ class _OnboardingGestureScreenState extends State<OnboardingGestureScreen> {
         }
       }
     } catch (e) {
-      print("Error loading gestures: $e");
+      // debug removed
     }
   }
 
@@ -301,7 +301,7 @@ class _OnboardingGestureScreenState extends State<OnboardingGestureScreen> {
                             child: Column(
                               children: [
                                 Text(
-                                  _isDetecting ? "🎯 DETECTING" : "👁️ MONITORING",
+                                  _isDetecting ? "� DETECTING" : " MONITORING",
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,

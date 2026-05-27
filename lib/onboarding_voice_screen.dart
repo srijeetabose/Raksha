@@ -1,4 +1,4 @@
-// lib/onboarding_voice_screen.dart
+﻿// lib/onboarding_voice_screen.dart
 
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -80,7 +80,7 @@ class _OnboardingVoiceScreenState extends State<OnboardingVoiceScreen> {
         }
       }
     });
-    print("Selected words: $selectedWords"); // Debug
+    // debug removed // Debug
   }
 
   Future<void> _saveWordsAndContinue() async {
@@ -99,7 +99,7 @@ class _OnboardingVoiceScreenState extends State<OnboardingVoiceScreen> {
         'onboardingStep': 'voice_complete',
       }, SetOptions(merge: true));
 
-      print("✅ Voice triggers saved: $selectedWords");
+      // debug removed
       _showSnackBar("Voice triggers saved successfully!");
       
       // Navigate to home screen
@@ -310,7 +310,7 @@ class _OnboardingVoiceScreenState extends State<OnboardingVoiceScreen> {
 
                               return InkWell(
                                 onTap: canSelect ? () {
-                                  print("Tapped: $word, canSelect: $canSelect, isSelected: $isSelected");
+                                  // debug removed
                                   _toggleWord(word);
                                 } : null,
                                 borderRadius: BorderRadius.circular(12),

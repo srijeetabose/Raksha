@@ -1,4 +1,4 @@
-class TriggerWordTranslations {
+﻿class TriggerWordTranslations {
   static const Map<String, List<String>> words = {
     'en-IN': [
       'Help', 'Danger', 'Emergency', 'Police', 'Rescue', 'Attack',
