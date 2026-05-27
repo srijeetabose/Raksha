@@ -13,6 +13,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:raksha/onboarding_gesture_screen.dart'; 
 import 'package:raksha/onboarding_contacts_screen.dart';
 import 'package:raksha/onboarding_voice_screen.dart';
+import 'package:raksha/onboarding_language_screen.dart';
 import 'package:raksha/secure_vault_screen.dart';
 import 'package:raksha/gestures_tab.dart'; 
 import 'package:raksha/contacts_tab.dart'; 
@@ -217,29 +218,31 @@ class _UserSafetyDashboardState extends State<UserSafetyDashboard> {
       final userId = FirebaseAuth.instance.currentUser?.uid;
       if (userId == null) return;
 
-      // Load user settings from Firestore
       final doc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
-      if (doc.exists) {
-        final data = doc.data()!;
-        final isBackgroundEnabled = data['isBackgroundRunningEnabled'] ?? true;
-        final isGestureEnabled = data['isGestureDetectionEnabled'] ?? false;
-        final isVoiceEnabled = data['isVoiceDetectionEnabled'] ?? false;
-        
-        if (isBackgroundEnabled && (isGestureEnabled || isVoiceEnabled)) {
-          // Get user's selected gestures and voice words from Firestore
-          final selectedGestures = isGestureEnabled 
-              ? (data['triggerGestures'] as List<dynamic>?)?.cast<String>() ?? <String>[]
-              : <String>[];
-          final voiceWords = isVoiceEnabled 
-              ? (data['triggerVoiceWords'] as List<dynamic>?)?.cast<String>() ?? <String>[]
-              : <String>[];
-          
-          await SosServiceChannel.startBackgroundService(selectedGestures, voiceWords);
-          print('Background service started with gestures: $selectedGestures, voice words: $voiceWords');
-        }
+      final data = doc.data() ?? {};
+
+      // Always load voice triggers — service runs regardless of toggles
+      final voiceWords = (data['triggerVoiceWords'] as List<dynamic>?)?.cast<String>()
+          ?? (data['voiceTriggers'] as List<dynamic>?)?.cast<String>()
+          ?? <String>[];
+
+      final selectedGestures = (data['triggerGestures'] as List<dynamic>?)?.cast<String>()
+          ?? <String>[];
+
+      // Start background service unconditionally — it must always run
+      await SosServiceChannel.startBackgroundService(selectedGestures, voiceWords);
+
+      // Also explicitly start voice detection with the user's triggers
+      if (voiceWords.isNotEmpty) {
+        const platform = MethodChannel('com.example.raksha/gesture_service');
+        await platform.invokeMethod('startVoiceDetection', {'triggers': voiceWords});
+        setState(() => _isVoiceSetUp = true);
+        print('🎤 Voice detection started with: $voiceWords');
       }
+
+      print('✅ Background services started');
     } catch (e) {
-      print('Failed to start background services: $e');
+      print('❌ Failed to start background services: $e');
     }
   }
 
@@ -982,7 +985,7 @@ class _HomeMapContentView extends StatelessWidget {
                   const Text("Quick Setup", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const Divider(),
                   _buildSetupRow(Icons.back_hand, "Train Gestures", "Customize emergency hand signals", () => _navigateTo(const OnboardingGestureScreen(), context)),
-                  _buildSetupRow(Icons.mic, "Voice Triggers", isVoiceSetUp ? "Edit covert phrases" : "Set up covert phrases", () => _navigateTo(const OnboardingVoiceScreen(), context)), 
+                  _buildSetupRow(Icons.mic, "Voice Triggers", isVoiceSetUp ? "Edit covert phrases" : "Set up covert phrases", () => _navigateTo(const OnboardingLanguageScreen(), context)), 
                   _buildSetupRow(Icons.contacts, "Emergency Contacts", contactsStatus, () => _navigateTo(const ContactsTab(), context)),
                 ],
               ),

@@ -118,8 +118,16 @@ class GestureRecognizerHelper(
                             .setMinHandDetectionConfidence(0.3f) // Much lower threshold
                             .setMinTrackingConfidence(0.3f)
                             .setMinHandPresenceConfidence(0.3f)
-                            .setMinHandPresenceConfidence(0.5f)
-                            .setRunningMode(RunningMode.IMAGE) // Force IMAGE mode
+                            .setRunningMode(runningMode) // Use configured running mode
+            
+            // CRITICAL: Set result listener for LIVE_STREAM mode
+            if (runningMode == RunningMode.LIVE_STREAM) {
+                optionsBuilder.setResultListener(this::returnLivestreamResult)
+                        .setErrorListener(this::returnLivestreamError)
+                Log.d(TAG, "🔧 LIVE_STREAM mode with result listener configured")
+            } else {
+                Log.d(TAG, "🔧 IMAGE mode configured")
+            }
 
             Log.d(TAG, "🔧 GestureRecognizerOptions configured")
 
@@ -295,8 +303,8 @@ class GestureRecognizerHelper(
                 // Map MediaPipe gesture names to our Raksha gesture names
                 val mappedGesture = mapGestureNameForRaksha(gestureName)
 
-                // EXTREMELY LOW THRESHOLD + SIMULATION FOR TESTING
-                if (mappedGesture != "Unknown" && confidence > 0.1f) {
+                // Only trigger on high confidence gestures
+                if (mappedGesture != "Unknown" && confidence > 0.7f) {
                     Log.d(
                             TAG,
                             "✅ HIGH CONFIDENCE RAKSHA GESTURE DETECTED: $mappedGesture (original: '$gestureName', confidence: ${(confidence * 100).toInt()}%)"
@@ -309,15 +317,10 @@ class GestureRecognizerHelper(
                             TAG,
                             "⚪ Unknown gesture ignored: $gestureName (${(confidence * 100).toInt()}%)"
                     )
-                } else if (confidence > 0.4f) {
-                    Log.d(
-                            TAG,
-                            "⚪ Medium confidence gesture: $gestureName (${(confidence * 100).toInt()}%) - not triggering"
-                    )
                 } else {
                     Log.d(
                             TAG,
-                            "⚪ Low confidence gesture: $gestureName (${(confidence * 100).toInt()}%)"
+                            "⚪ Low confidence gesture: $gestureName (${(confidence * 100).toInt()}%) - threshold is 70%"
                     )
                 }
 
@@ -331,15 +334,6 @@ class GestureRecognizerHelper(
             }
         } else {
             Log.d(TAG, "👁️ No gestures detected in this frame")
-            
-            // AGGRESSIVE TESTING: Simulate gesture every 5 seconds
-            val currentTime = System.currentTimeMillis()
-            if (currentTime % 5000 < 500) { // Every 5 seconds for 0.5 second
-                Log.d(TAG, "🧪 AGGRESSIVE GESTURE SIMULATION")
-                val testGestures = listOf("Thumb_Up", "Victory", "Closed_Fist", "Thumb_Down")
-                val randomGesture = testGestures[(currentTime / 5000 % testGestures.size).toInt()]
-                notifyRakshaGestureDetected(randomGesture, 0.95f)
-            }
         }
     }
 

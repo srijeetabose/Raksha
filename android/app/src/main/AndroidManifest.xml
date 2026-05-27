@@ -18,6 +18,8 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" tools:targetApi="34"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" tools:targetApi="34"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" tools:targetApi="34"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" tools:targetApi="34"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     
     <!-- Permissions for background gesture detection -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
@@ -64,13 +66,71 @@
             </intent-filter>
         </activity>
         
-        <!-- Raksha Foreground Service Declaration -->
+        <!-- Raksha Foreground Service — always-on voice detection -->
         <service
             android:name=".RakshaForegroundService"
             android:enabled="true"
             android:exported="false"
-            android:foregroundServiceType="camera|microphone"
-            android:stopWithTask="false" />
+            android:foregroundServiceType="specialUse"
+            android:stopWithTask="false">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Emergency voice keyword detection" />
+        </service>
+
+        <!-- Boot receiver — restarts service after phone reboot -->
+        <receiver
+            android:name=".BootReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>
+            
+        <!-- SOS Notification Service for 10-second countdown -->
+        <service
+            android:name=".SOSNotificationService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="specialUse"
+            android:stopWithTask="false">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Emergency SOS countdown notification" />
+        </service>
+        
+        <!-- Stealth Recording Service for Secure Vault -->
+        <service
+            android:name=".StealthRecordingService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="specialUse"
+            android:stopWithTask="false">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Emergency stealth recording for safety evidence" />
+        </service>
+            
+        <!-- SOS Countdown Activity for Full-Screen Popup -->
+        <activity
+            android:name=".SOSCountdownActivity"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:excludeFromRecents="true"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
+            android:theme="@style/Theme.AppCompat.NoActionBar" />
+            
+        <!-- Voice Listener Activity - Invisible foreground activity for voice detection -->
+        <activity
+            android:name=".VoiceListenerActivity"
+            android:exported="false"
+            android:launchMode="singleInstance"
+            android:excludeFromRecents="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:configChanges="orientation|screenSize|keyboardHidden" />
             
         <!-- Raksha Accessibility Service for System-Wide Detection - FIXED -->
         <service
@@ -89,6 +149,17 @@
         <!-- <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-3940256099942544~3347511713"/> -->
+        
+        <!-- FileProvider for secure vault playback -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
 
         <meta-data
             android:name="flutterEmbedding"

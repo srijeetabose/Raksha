@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Secure vault directory in app-private storage -->
+    <files-path name="secure_vault" path=".secure_vault/" />
+    
+    <!-- General files directory -->
+    <files-path name="files" path="." />
+    
+    <!-- Cache directory for temporary playback -->
+    <cache-path name="cache" path="." />
+    
+    <!-- External cache directory -->
+    <external-cache-path name="external_cache" path="." />
+    
+    <!-- External files directory -->
+    <external-files-path name="external_files" path="." />
+</paths>

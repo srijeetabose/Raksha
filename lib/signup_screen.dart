@@ -61,6 +61,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
   }
 
+  // Validate email format
+  bool _isValidEmail(String email) {
+    // Basic email regex pattern
+    final emailRegex = RegExp(
+      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+    );
+    return emailRegex.hasMatch(email);
+  }
+
   // --- Main Sign Up Logic (Same as previous step, just re-included for context) ---
   Future<void> _signUp() async {
     final name = _nameController.text.trim();
@@ -76,6 +85,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
       );
       return;
     }
+    
+    // Validate email format
+    if (!_isValidEmail(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("❌ Please enter a valid email address (e.g., user@gmail.com)"),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+    
     if (isPolice && _policeIdImage == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Police Mode requires an Official ID card to be captured.")),
@@ -92,7 +114,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
         password: password,
       );
       final userId = userCredential.user!.uid;
-
+      
+      // CRITICAL: Send email verification
+      await userCredential.user!.sendEmailVerification();
+      
       if (isPolice && _policeIdImage != null) {
         final ref = _firebaseStorage
             .ref()
@@ -110,6 +135,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         'phone': phone,
         'userRole': isPolice ? 'police' : 'user',
         'onboardingComplete': false,
+        'emailVerified': false, // Track verification status
       };
 
       await _firestore.collection('users').doc(userId).set(userData);
@@ -126,24 +152,87 @@ class _SignUpScreenState extends State<SignUpScreen> {
         });
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(isPolice ? "Account created. Verification pending." : "Account created successfully!")),
-      );
+      // Sign out user until they verify email
+      await _firebaseAuth.signOut();
 
-      Navigator.of(context).pop();
+      // Show detailed verification instructions
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            title: const Text("✅ Account Created!"),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "A verification email has been sent to:\n\n$email",
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  "Important Steps:",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                const Text("1. Check your email inbox (and spam folder)"),
+                const Text("2. Click the verification link in the email"),
+                const Text("3. Return to Raksha and log in"),
+                const SizedBox(height: 16),
+                const Text(
+                  "⚠️ You must verify your email before you can log in.",
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  "Note: If you don't receive the email within 5 minutes, the email address may not exist or be incorrect.",
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            ),
+            actions: [
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Close dialog
+                  Navigator.of(context).pop(); // Go back to login
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF6A5AE3),
+                ),
+                child: const Text("OK", style: TextStyle(color: Colors.white)),
+              ),
+            ],
+          ),
+        );
+      }
 
     } on FirebaseAuthException catch (e) {
       String message = "Sign up failed.";
       if (e.code == 'email-already-in-use') {
-        message = "User already exists with this email, please login.";
+        message = "❌ This email is already registered. Please login instead.";
+      } else if (e.code == 'invalid-email') {
+        message = "❌ Invalid email format. Please enter a valid email address.";
+      } else if (e.code == 'weak-password') {
+        message = "❌ Password is too weak. Use at least 6 characters.";
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 4),
+        ),
       );
     } catch (e) {
       print("General Sign Up Error: $e");
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("An unexpected error occurred.")),
+        const SnackBar(
+          content: Text("❌ An unexpected error occurred. Please try again."),
+          backgroundColor: Colors.red,
+        ),
       );
     } finally {
       if (mounted) {

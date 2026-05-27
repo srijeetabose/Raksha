@@ -55,6 +55,8 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore-ktx")
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-storage-ktx")
+    // ML Kit for language detection (NLP pipeline)
+    implementation("com.google.mlkit:language-id:17.0.4")
 
     // LOCATION SERVICES
     implementation("com.google.android.gms:play-services-location:21.0.1")
@@ -72,6 +74,9 @@ dependencies {
 
     // NOTIFICATIONS
     implementation("androidx.core:core:1.12.0")
+    
+    // ML Kit Language Identification — on-device, no API key needed
+    implementation("com.google.mlkit:language-id:17.0.6")
     
     // SPEECH RECOGNITION
     implementation("androidx.core:core-ktx:1.12.0")

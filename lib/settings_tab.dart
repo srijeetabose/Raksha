@@ -27,7 +27,7 @@ class _SettingsTabState extends State<SettingsTab> {
   bool _isBackgroundRunningEnabled = false;
   
   // State for Voice Trigger
-  String _currentTriggerWord = "Loading...";
+  List<String> _currentTriggerWords = [];
   bool _isLoading = true;
 
   @override
@@ -56,9 +56,10 @@ class _SettingsTabState extends State<SettingsTab> {
             _isGestureDetectionEnabled = data['isGestureDetectionEnabled'] ?? false;
             _isVoiceDetectionEnabled = data['isVoiceDetectionEnabled'] ?? false;
             _isLiveLocationEnabled = data['isLiveLocationEnabled'] ?? false;
-            _isBackgroundRunningEnabled = data['isBackgroundRunningEnabled'] ?? true; // Assume true if not set
-            _currentTriggerWord = data['voiceTriggerWord'] ?? "Strawberry";
-            _voiceTriggerController.text = _currentTriggerWord;
+            _isBackgroundRunningEnabled = data['isBackgroundRunningEnabled'] ?? true;
+            _currentTriggerWords = (data['triggerVoiceWords'] as List<dynamic>?)?.cast<String>()
+                ?? (data['voiceTriggers'] as List<dynamic>?)?.cast<String>()
+                ?? [];
             _isLoading = false;
           });
         }
@@ -133,20 +134,11 @@ class _SettingsTabState extends State<SettingsTab> {
   Future<void> _testVoiceRecognition() async {
     setState(() => _isLoading = true);
     try {
-      final userId = _auth.currentUser?.uid;
-      if (userId == null) return;
-
-      final doc = await _firestore.collection('users').doc(userId).get();
-      if (doc.exists) {
-        final data = doc.data()!;
-        final voiceWords = (data['triggerVoiceWords'] as List<dynamic>?)?.cast<String>() ?? [];
-        
-        if (voiceWords.isEmpty) {
-          _showSnackBar("No voice triggers set up. Please configure voice triggers first.", Colors.orange);
-        } else {
-          await _restartBackgroundService();
-          _showSnackBar("Voice recognition test started. Try saying 'Raksha ${voiceWords.first}'", Colors.blue);
-        }
+      if (_currentTriggerWords.isEmpty) {
+        _showSnackBar("No voice triggers set up. Please configure voice triggers first.", Colors.orange);
+      } else {
+        await _restartBackgroundService();
+        _showSnackBar("Voice recognition active. Try saying: ${_currentTriggerWords.join(', ')}", Colors.blue);
       }
     } catch (e) {
       _showSnackBar("Voice test failed: ${e.toString()}", Colors.red);
@@ -173,23 +165,6 @@ class _SettingsTabState extends State<SettingsTab> {
     }
   }
   
-  // --- Voice Trigger Logic ---
-  Future<void> _updateTriggerWord() async {
-    final newWord = _voiceTriggerController.text.trim();
-    if (newWord.isEmpty || newWord == _currentTriggerWord) {
-      _showSnackBar("Trigger word unchanged.", Colors.orange);
-      return;
-    }
-    
-    setState(() => _isLoading = true);
-    await _updateSetting('voiceTriggerWord', newWord);
-    await _restartBackgroundService(); // Restart service with new trigger word
-    setState(() {
-      _currentTriggerWord = newWord;
-      _isLoading = false;
-    });
-  }
-
   // --- Core Security Feature: Forgot PIN Logic (Same as before) ---
   Future<void> _forgotPinFlow() async {
     final userEmail = _auth.currentUser?.email;
@@ -308,58 +283,67 @@ class _SettingsTabState extends State<SettingsTab> {
 
               // 2. VOICE TRIGGER Card
               _buildSettingCard(
-                title: "Voice Trigger",
+                title: "Voice Trigger Words",
                 widgets: [
-                  ListTile(
-                    title: const Text("Current Trigger Word"),
-                    subtitle: Text(_currentTriggerWord, style: const TextStyle(fontWeight: FontWeight.bold, color: purpleDark, fontSize: 16)),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                    child: _currentTriggerWords.isEmpty
+                        ? const ListTile(
+                            leading: Icon(Icons.warning_amber, color: Colors.orange),
+                            title: Text("No trigger words set"),
+                            subtitle: Text("Tap below to configure your 3 emergency words"),
+                          )
+                        : Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: _currentTriggerWords.map((word) => Chip(
+                              label: Text(word, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                              backgroundColor: const Color(0xFF6A5AE3),
+                              avatar: const Icon(Icons.mic, color: Colors.white, size: 16),
+                            )).toList(),
+                          ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
-                    child: TextField(
-                      controller: _voiceTriggerController,
-                      decoration: InputDecoration(
-                        labelText: "New Trigger Word",
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                     child: SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
-                        onPressed: _isLoading ? null : _updateTriggerWord,
-                        icon: const Icon(Icons.mic),
-                        label: const Text("Update Trigger Word"),
-                        style: ElevatedButton.styleFrom(backgroundColor: purpleDark, foregroundColor: Colors.white),
+                        onPressed: _isLoading ? null : () async {
+                          await Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const _VoiceWordPickerSheet()),
+                          );
+                          _loadSettings(); // Reload after returning
+                        },
+                        icon: const Icon(Icons.edit),
+                        label: Text(_currentTriggerWords.isEmpty ? "Set Trigger Words" : "Change Trigger Words"),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF6A5AE3),
+                          foregroundColor: Colors.white,
+                        ),
                       ),
                     ),
                   ),
-                  Column(
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          TextButton.icon(
-                            onPressed: _testVoiceRecognition,
-                            icon: const Icon(Icons.volume_up, color: purpleDark),
-                            label: const Text("Test Voice", style: TextStyle(color: purpleDark)),
-                          ),
-                          TextButton.icon(
-                            onPressed: _testLocationServices,
-                            icon: const Icon(Icons.location_on, color: purpleDark),
-                            label: const Text("Test Location", style: TextStyle(color: purpleDark)),
-                          ),
-                        ],
+                      TextButton.icon(
+                        onPressed: _testVoiceRecognition,
+                        icon: const Icon(Icons.volume_up, color: Color(0xFF6A5AE3)),
+                        label: const Text("Test Voice", style: TextStyle(color: Color(0xFF6A5AE3))),
                       ),
                       TextButton.icon(
-                        onPressed: _resetOnboarding,
-                        icon: const Icon(Icons.refresh, color: Colors.orange),
-                        label: const Text("Reset Onboarding (Debug)", style: TextStyle(color: Colors.orange)),
+                        onPressed: _testLocationServices,
+                        icon: const Icon(Icons.location_on, color: Color(0xFF6A5AE3)),
+                        label: const Text("Test Location", style: TextStyle(color: Color(0xFF6A5AE3))),
                       ),
                     ],
                   ),
+                  TextButton.icon(
+                    onPressed: _resetOnboarding,
+                    icon: const Icon(Icons.refresh, color: Colors.orange),
+                    label: const Text("Reset Onboarding (Debug)", style: TextStyle(color: Colors.orange)),
+                  ),
+                  const SizedBox(height: 8),
                 ],
               ),
               
@@ -458,6 +442,170 @@ class _SettingsTabState extends State<SettingsTab> {
       subtitle: Text(subtitle),
       trailing: Switch(value: value, onChanged: onChanged, activeThumbColor: Colors.green),
       onTap: () => onChanged(!value), // Allows tapping the whole row
+    );
+  }
+}
+
+// Inline word picker screen for changing trigger words from settings
+class _VoiceWordPickerSheet extends StatefulWidget {
+  const _VoiceWordPickerSheet();
+
+  @override
+  State<_VoiceWordPickerSheet> createState() => _VoiceWordPickerSheetState();
+}
+
+class _VoiceWordPickerSheetState extends State<_VoiceWordPickerSheet> {
+  static const List<String> _availableWords = [
+    'Help', 'Danger', 'Emergency', 'Police', 'Rescue', 'Attack',
+    'Fire', 'Thief', 'Intruder', 'Accident', 'Medical', 'Urgent',
+    'Crisis', 'Threat', 'Alarm', 'Alert', 'Panic', 'Trouble',
+    'Assist', 'Save', 'Stop', 'Run', 'Escape', 'Protect',
+    'Call', 'Now', 'Quick', 'Fast', 'Immediate', 'SOS',
+  ];
+
+  List<String> _selected = [];
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadExisting();
+  }
+
+  Future<void> _loadExisting() async {
+    try {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null) return;
+      final doc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+      if (doc.exists) {
+        final data = doc.data()!;
+        final words = (data['triggerVoiceWords'] as List<dynamic>?)?.cast<String>()
+            ?? (data['voiceTriggers'] as List<dynamic>?)?.cast<String>()
+            ?? [];
+        if (mounted) {
+          final normalized = words.map((t) {
+            return _availableWords.firstWhere(
+              (w) => w.toLowerCase() == t.toLowerCase(),
+              orElse: () => t,
+            );
+          }).toList();
+          setState(() => _selected = normalized);
+        }
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _save() async {
+    if (_selected.length != 3) return;
+    setState(() => _saving = true);
+    try {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null) return;
+      await FirebaseFirestore.instance.collection('users').doc(uid).set({
+        'triggerVoiceWords': _selected,
+        'voiceTriggers': _selected,
+        'isVoiceDetectionEnabled': true,
+      }, SetOptions(merge: true));
+      if (mounted) Navigator.of(context).pop();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save: $e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const purpleDark = Color(0xFF6A5AE3);
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Choose 3 Trigger Words'),
+        backgroundColor: purpleDark,
+        foregroundColor: Colors.white,
+        actions: [
+          if (_selected.length == 3)
+            TextButton(
+              onPressed: _saving ? null : _save,
+              child: _saving
+                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : const Text('Save', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+            ),
+        ],
+      ),
+      body: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            color: _selected.length == 3 ? Colors.green.shade50 : Colors.purple.shade50,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  _selected.length == 3 ? Icons.check_circle : Icons.radio_button_unchecked,
+                  color: _selected.length == 3 ? Colors.green : purpleDark,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '${_selected.length} / 3 selected',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: _selected.length == 3 ? Colors.green : purpleDark,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: GridView.builder(
+              padding: const EdgeInsets.all(16),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                childAspectRatio: 2.2,
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
+              ),
+              itemCount: _availableWords.length,
+              itemBuilder: (context, index) {
+                final word = _availableWords[index];
+                final isSelected = _selected.contains(word);
+                final canSelect = _selected.length < 3 || isSelected;
+                return InkWell(
+                  onTap: canSelect
+                      ? () => setState(() {
+                            isSelected ? _selected.remove(word) : _selected.add(word);
+                          })
+                      : null,
+                  borderRadius: BorderRadius.circular(12),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 150),
+                    decoration: BoxDecoration(
+                      color: isSelected ? purpleDark : canSelect ? Colors.grey[100] : Colors.grey[200],
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isSelected ? Colors.transparent : Colors.grey[300]!,
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        word,
+                        style: TextStyle(
+                          color: isSelected ? Colors.white : canSelect ? Colors.black87 : Colors.grey[400],
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

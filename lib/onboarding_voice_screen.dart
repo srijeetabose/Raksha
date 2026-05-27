@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:raksha/home_screen.dart';
+import 'package:raksha/trigger_words_translations.dart';
 
 class OnboardingVoiceScreen extends StatefulWidget {
   const OnboardingVoiceScreen({super.key});
@@ -13,17 +14,17 @@ class OnboardingVoiceScreen extends StatefulWidget {
 }
 
 class _OnboardingVoiceScreenState extends State<OnboardingVoiceScreen> {
-  // 30 less common words for better security
-  final List<String> availableWords = [
-    'Sunset', 'Cobalt', 'Anchor', 'Whisper', 'Thunder', 'Crystal',
-    'Shadow', 'Velvet', 'Phoenix', 'Marble', 'Silver', 'Crimson',
-    'Glacier', 'Ember', 'Sapphire', 'Raven', 'Ivory', 'Copper',
-    'Mystic', 'Prism', 'Falcon', 'Jade', 'Storm', 'Pearl',
-    'Onyx', 'Flame', 'Frost', 'Ruby', 'Steel', 'Violet'
+  List<String> availableWords = [
+    'Help', 'Danger', 'Emergency', 'Police', 'Rescue', 'Attack',
+    'Fire', 'Thief', 'Intruder', 'Accident', 'Medical', 'Urgent',
+    'Crisis', 'Threat', 'Alarm', 'Alert', 'Panic', 'Trouble',
+    'Assist', 'Save', 'Stop', 'Run', 'Escape', 'Protect',
+    'Call', 'Now', 'Quick', 'Fast', 'Immediate', 'SOS'
   ];
   
   List<String> selectedWords = [];
   bool _isLoading = false;
+  String _languageCode = 'en-IN';
   final String? _userId = FirebaseAuth.instance.currentUser?.uid;
 
   @override
@@ -33,31 +34,53 @@ class _OnboardingVoiceScreenState extends State<OnboardingVoiceScreen> {
   }
 
   Future<void> _loadExistingWords() async {
-    if (_userId == null) return;
-    
     try {
-      final doc = await FirebaseFirestore.instance.collection('users').doc(_userId).get();
-      if (doc.exists && doc.data() != null) {
-        final savedWords = doc.data()!['triggerVoiceWords'] as List<dynamic>?;
-        if (savedWords != null) {
+      final userId = FirebaseAuth.instance.currentUser?.uid;
+      if (userId == null) return;
+      final doc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+      if (doc.exists) {
+        final data = doc.data()!;
+        // Load language and update word list
+        final lang = data['voiceLanguage'] as String? ?? 'en-IN';
+        final translatedWords = TriggerWordTranslations.getWords(lang);
+        final triggers = (data['triggerVoiceWords'] as List<dynamic>?)?.cast<String>()
+            ?? (data['voiceTriggers'] as List<dynamic>?)?.cast<String>()
+            ?? [];
+        if (mounted) {
           setState(() {
-            selectedWords = savedWords.cast<String>();
+            _languageCode = lang;
+            availableWords = translatedWords;
+            if (triggers.isNotEmpty) {
+              // Normalize to match translated words
+              final normalized = triggers.map((t) {
+                return availableWords.firstWhere(
+                  (w) => w.toLowerCase() == t.toLowerCase(),
+                  orElse: () => t,
+                );
+              }).toList();
+              selectedWords = normalized;
+            }
           });
         }
       }
     } catch (e) {
-      print('Error loading existing words: $e');
+      // ignore, start fresh
     }
   }
 
   void _toggleWord(String word) {
     setState(() {
       if (selectedWords.contains(word)) {
+        // Remove if already selected
         selectedWords.remove(word);
-      } else if (selectedWords.length < 3) {
-        selectedWords.add(word);
+      } else {
+        // Add if less than 3 selected
+        if (selectedWords.length < 3) {
+          selectedWords.add(word);
+        }
       }
     });
+    print("Selected words: $selectedWords"); // Debug
   }
 
   Future<void> _saveWordsAndContinue() async {
@@ -69,13 +92,14 @@ class _OnboardingVoiceScreenState extends State<OnboardingVoiceScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await FirebaseFirestore.instance.collection('users').doc(_userId).update({
-        'triggerVoiceWords': selectedWords, // Fixed field name to match loading
+      await FirebaseFirestore.instance.collection('users').doc(_userId).set({
+        'triggerVoiceWords': selectedWords,
         'voiceTriggers': selectedWords, // Keep both for compatibility
         'isVoiceDetectionEnabled': true,
         'onboardingStep': 'voice_complete',
-      });
+      }, SetOptions(merge: true));
 
+      print("✅ Voice triggers saved: $selectedWords");
       _showSnackBar("Voice triggers saved successfully!");
       
       // Navigate to home screen
@@ -103,121 +127,245 @@ class _OnboardingVoiceScreenState extends State<OnboardingVoiceScreen> {
   @override
   Widget build(BuildContext context) {
     const Color purpleDark = Color(0xFF6A5AE3);
+    const Color purpleLight = Color(0xFF936EE4);
 
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [Color(0xFF936EE4), Color(0xFF6A5AE3)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
         ),
         child: SafeArea(
           child: Column(
             children: [
-              // Header
+              // Modern Header with Icon
               Padding(
-                padding: const EdgeInsets.all(24.0),
+                padding: const EdgeInsets.fromLTRB(24, 32, 24, 16),
                 child: Column(
                   children: [
-                    const Icon(Icons.mic, size: 64, color: Colors.white),
-                    const SizedBox(height: 16),
+                    // Icon with glow effect
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.white.withOpacity(0.3),
+                            blurRadius: 20,
+                            spreadRadius: 5,
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.mic_rounded,
+                        size: 48,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    
+                    // Title
                     const Text(
                       "Voice Trigger Setup",
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 28,
+                        fontSize: 32,
                         fontWeight: FontWeight.bold,
+                        letterSpacing: -0.5,
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      "Select exactly 3 words. Say 'Raksha [word]' to trigger SOS",
+                    const SizedBox(height: 12),
+                    
+                    // Subtitle
+                    Text(
+                      "Choose 3 words in ${TriggerWordTranslations.getLanguageName(_languageCode)} that will activate emergency mode",
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.white70, fontSize: 16),
-                    ),
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(20),
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.9),
+                        fontSize: 16,
+                        height: 1.4,
                       ),
-                      child: Text(
-                        "Selected: ${selectedWords.length}/3",
-                        style: TextStyle(
-                          color: selectedWords.length == 3 ? Colors.green[200] : Colors.orange[200],
-                          fontWeight: FontWeight.bold,
+                    ),
+                    const SizedBox(height: 20),
+                    
+                    // Selection Counter with modern design
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: selectedWords.length == 3 
+                            ? Colors.green.withOpacity(0.3)
+                            : Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(30),
+                        border: Border.all(
+                          color: selectedWords.length == 3 
+                              ? Colors.greenAccent
+                              : Colors.white.withOpacity(0.5),
+                          width: 2,
                         ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            selectedWords.length == 3 
+                                ? Icons.check_circle_rounded
+                                : Icons.radio_button_unchecked_rounded,
+                            color: selectedWords.length == 3 
+                                ? Colors.greenAccent
+                                : Colors.white,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            "${selectedWords.length} / 3 Selected",
+                            style: TextStyle(
+                              color: selectedWords.length == 3 
+                                  ? Colors.greenAccent
+                                  : Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
               ),
 
-              // Word Selection Grid
+              // Word Selection Card
               Expanded(
                 child: Container(
-                  margin: const EdgeInsets.all(16),
-                  padding: const EdgeInsets.all(16),
+                  margin: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
                   ),
                   child: Column(
                     children: [
-                      const Text(
-                        "Choose Your Trigger Words",
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: purpleDark,
+                      // Card Header
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: purpleDark.withOpacity(0.05),
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(24),
+                            topRight: Radius.circular(24),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: purpleDark.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Icon(
+                                Icons.touch_app_rounded,
+                                color: purpleDark,
+                                size: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            const Text(
+                              "Tap to Select Words",
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: purpleDark,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      
+                      // Word Grid
                       Expanded(
-                        child: GridView.builder(
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 3,
-                            childAspectRatio: 2.5,
-                            crossAxisSpacing: 8,
-                            mainAxisSpacing: 8,
-                          ),
-                          itemCount: availableWords.length,
-                          itemBuilder: (context, index) {
-                            final word = availableWords[index];
-                            final isSelected = selectedWords.contains(word);
-                            final canSelect = selectedWords.length < 3 || isSelected;
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: GridView.builder(
+                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 3,
+                              childAspectRatio: 2.2,
+                              crossAxisSpacing: 10,
+                              mainAxisSpacing: 10,
+                            ),
+                            itemCount: availableWords.length,
+                            itemBuilder: (context, index) {
+                              final word = availableWords[index];
+                              final isSelected = selectedWords.contains(word);
+                              final canSelect = selectedWords.length < 3 || isSelected;
 
-                            return GestureDetector(
-                              onTap: canSelect ? () => _toggleWord(word) : null,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: isSelected 
-                                      ? purpleDark 
-                                      : canSelect 
-                                          ? Colors.grey[100] 
-                                          : Colors.grey[300],
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: isSelected ? purpleDark : Colors.grey[400]!,
-                                    width: 2,
+                              return InkWell(
+                                onTap: canSelect ? () {
+                                  print("Tapped: $word, canSelect: $canSelect, isSelected: $isSelected");
+                                  _toggleWord(word);
+                                } : null,
+                                borderRadius: BorderRadius.circular(12),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  decoration: BoxDecoration(
+                                    gradient: isSelected 
+                                        ? const LinearGradient(
+                                            colors: [purpleLight, purpleDark],
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                          )
+                                        : null,
+                                    color: isSelected 
+                                        ? null
+                                        : canSelect 
+                                            ? Colors.grey[100]
+                                            : Colors.grey[200],
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: isSelected 
+                                          ? Colors.transparent
+                                          : canSelect
+                                              ? Colors.grey[300]!
+                                              : Colors.grey[400]!,
+                                      width: 1.5,
+                                    ),
+                                    boxShadow: isSelected ? [
+                                      BoxShadow(
+                                        color: purpleDark.withOpacity(0.3),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ] : null,
                                   ),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    word,
-                                    style: TextStyle(
-                                      color: isSelected ? Colors.white : Colors.black87,
-                                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                      fontSize: 14,
+                                  child: Center(
+                                    child: Text(
+                                      word,
+                                      style: TextStyle(
+                                        color: isSelected 
+                                            ? Colors.white
+                                            : canSelect
+                                                ? Colors.black87
+                                                : Colors.grey[500],
+                                        fontWeight: isSelected 
+                                            ? FontWeight.bold
+                                            : FontWeight.w500,
+                                        fontSize: 13,
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            );
-                          },
+                              );
+                            },
+                          ),
                         ),
                       ),
                     ],
@@ -226,41 +374,16 @@ class _OnboardingVoiceScreenState extends State<OnboardingVoiceScreen> {
               ),
 
               // Bottom Section
-              Padding(
-                padding: const EdgeInsets.all(24.0),
+              Container(
+                padding: const EdgeInsets.all(24),
                 child: Column(
                   children: [
-                    // Example Usage
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Column(
-                        children: [
-                          const Text(
-                            "Example Usage:",
-                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 8),
-                          if (selectedWords.isNotEmpty)
-                            Text(
-                              '"Raksha ${selectedWords.first}"',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontStyle: FontStyle.italic,
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
 
                     // Save Button
                     SizedBox(
                       width: double.infinity,
+                      height: 56,
                       child: ElevatedButton(
                         onPressed: _isLoading || selectedWords.length != 3 
                             ? null 
@@ -268,21 +391,44 @@ class _OnboardingVoiceScreenState extends State<OnboardingVoiceScreen> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
                           foregroundColor: purpleDark,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          disabledBackgroundColor: Colors.white.withOpacity(0.3),
+                          elevation: 0,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(16),
                           ),
                         ),
                         child: _isLoading
-                            ? const CircularProgressIndicator()
-                            : const Text(
-                                "Save Voice Triggers",
-                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            ? const SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(purpleDark),
+                                ),
+                              )
+                            : Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Text(
+                                    "Continue",
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Icon(
+                                    Icons.arrow_forward_rounded,
+                                    color: selectedWords.length == 3 
+                                        ? purpleDark
+                                        : Colors.grey,
+                                  ),
+                                ],
                               ),
                       ),
                     ),
 
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
 
                     // Skip Button
                     TextButton(
@@ -292,9 +438,12 @@ class _OnboardingVoiceScreenState extends State<OnboardingVoiceScreen> {
                           (route) => false,
                         );
                       },
-                      child: const Text(
-                        "Skip Voice Setup",
-                        style: TextStyle(color: Colors.white70),
+                      child: Text(
+                        "Skip for now",
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.8),
+                          fontSize: 16,
+                        ),
                       ),
                     ),
                   ],

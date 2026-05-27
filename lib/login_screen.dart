@@ -40,10 +40,52 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       // This is mAuth.signInWithEmailAndPassword
-      await _firebaseAuth.signInWithEmailAndPassword(
+      final userCredential = await _firebaseAuth.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
+      
+      // Check if email is verified
+      if (!userCredential.user!.emailVerified) {
+        // Sign out the user
+        await _firebaseAuth.signOut();
+        
+        // Show dialog with option to resend verification email
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text("Email Not Verified"),
+            content: const Text(
+              "Please verify your email before logging in. Check your inbox for the verification link.",
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("OK"),
+              ),
+              TextButton(
+                onPressed: () async {
+                  try {
+                    await userCredential.user!.sendEmailVerification();
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Verification email sent!")),
+                    );
+                  } catch (e) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Error: ${e.toString()}")),
+                    );
+                  }
+                },
+                child: const Text("Resend Email"),
+              ),
+            ],
+          ),
+        );
+        return;
+      }
+      
       // Navigation to Home is handled by the AuthWrapper!
       // We don't need to do anything here.
     } on FirebaseAuthException catch (e) {

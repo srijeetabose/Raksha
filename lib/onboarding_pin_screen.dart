@@ -32,6 +32,10 @@ class _OnboardingPinScreenState extends State<OnboardingPinScreen> {
     final confirmPin = _confirmPinController.text;
 
     // --- Validation ---
+    if (pin.isEmpty || confirmPin.isEmpty) {
+      _showSnackBar("Please enter PIN in both fields.");
+      return;
+    }
     if (pin.length != 4 || confirmPin.length != 4) {
       _showSnackBar("PIN must be exactly 4 digits.");
       return;
@@ -45,25 +49,60 @@ class _OnboardingPinScreenState extends State<OnboardingPinScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final userId = FirebaseAuth.instance.currentUser!.uid;
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        _showSnackBar("No user logged in. Please login again.");
+        setState(() => _isLoading = false);
+        return;
+      }
+      
+      final userId = user.uid;
+      print("📝 Saving PIN for user: $userId");
       
       // CRITICAL: HASH THE PIN BEFORE STORING IT
       final pinHash = hashPin(pin);
+      print("🔐 PIN hashed successfully");
 
-      await FirebaseFirestore.instance.collection('users').doc(userId).update({
-        'secureVaultPinHash': pinHash, // Store the secure HASH
-        'onboardingStep': 'pin_complete',
-      });
+      // Use set with merge:true instead of update to create document if it doesn't exist
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .set({
+            'secureVaultPinHash': pinHash,
+            'onboardingStep': 'pin_complete',
+            'pinSetAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
 
-      _showSnackBar("Secure Vault PIN Set!");
+      print("✅ PIN saved successfully to Firestore");
+      
+      // Verify it was saved
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .get();
+      
+      if (doc.exists && doc.data()?['secureVaultPinHash'] != null) {
+        print("✅ PIN verified in Firestore");
+        _showSnackBar("Secure Vault PIN Set!");
+        
+        // Wait a moment for user to see success message
+        await Future.delayed(const Duration(milliseconds: 500));
+        
+        // Navigate to next screen
+        if (mounted) {
+          Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (_) => const OnboardingBiometricScreen()),
+              (route) => false);
+        }
+      } else {
+        print("❌ PIN not found in Firestore after save");
+        _showSnackBar("Failed to verify PIN. Please try again.");
+      }
 
-      // CRITICAL FIX: Navigate to the mandatory Biometric Setup Screen
-      Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const OnboardingBiometricScreen()),
-          (route) => false); 
-
-    } catch (e) {
-      _showSnackBar("Failed to save PIN. Try again.");
+    } catch (e, stackTrace) {
+      print("❌ Error saving PIN: $e");
+      print("Stack trace: $stackTrace");
+      _showSnackBar("Failed to save PIN. Error: ${e.toString()}");
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

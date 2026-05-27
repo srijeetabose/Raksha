@@ -5,8 +5,15 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.content.pm.PackageManager
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
@@ -16,275 +23,395 @@ import android.os.VibrationEffect
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
-import android.telephony.SmsManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import kotlin.math.sqrt
 
-class RakshaForegroundService : Service(), RecognitionListener {
-    
+class RakshaForegroundService : Service(), RecognitionListener, SensorEventListener {
+
     private var wakeLock: PowerManager.WakeLock? = null
     private var speechRecognizer: SpeechRecognizer? = null
     private var voiceTriggers = mutableListOf<String>()
     private var isListeningForVoice = false
+    private var voiceLanguage = "en-IN"
+    private val handler = android.os.Handler(android.os.Looper.getMainLooper())
+
+
+    private var sensorManager: SensorManager? = null
+    private var accelerometer: Sensor? = null
+    private var lastShakeTime = 0L
+    private var shakeCount = 0
+    private val SHAKE_THRESHOLD = 25f      // Very hard shake only (normal movement ~5, running ~12)
+    private val SHAKE_COUNT_REQUIRED = 5   // Must shake 5 times
+    private val SHAKE_RESET_MS = 1500L     // Within 1.5 seconds
+
+    // Cooldown
+    private var lastTriggerTime = 0L
+    private val TRIGGER_COOLDOWN_MS = 30 * 1000L
 
     companion object {
         private const val TAG = "RakshaForegroundService"
         const val CHANNEL_ID = "RAKSHA_SOS_CHANNEL"
         const val NOTIFICATION_ID = 101
         const val ACTION_START_LISTENER = "START_LISTENER"
+        const val EXTRA_TRIGGERS = "VOICE_TRIGGERS"
+    }
+
+    private val safeReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            Log.d(TAG, "✅ I AM SAFE — resetting cooldown")
+            lastTriggerTime = 0L
+        }
     }
 
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
-        
-        // Acquire wake lock to keep service active
+
         val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
         wakeLock = powerManager.newWakeLock(
-            PowerManager.PARTIAL_WAKE_LOCK,
-            "Raksha::EmergencySystem24x7"
+            PowerManager.PARTIAL_WAKE_LOCK, "Raksha::EmergencySystem24x7"
         )
-        wakeLock?.acquire(24*60*60*1000L)
-        
-        Log.d(TAG, "RakshaForegroundService created")
-        
-        // Start as foreground service immediately
+        wakeLock?.acquire(24 * 60 * 60 * 1000L)
+
+        val filter = IntentFilter("com.example.raksha.I_AM_SAFE")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(safeReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            registerReceiver(safeReceiver, filter)
+        }
+
         startForeground(NOTIFICATION_ID, createPersistentNotification())
+
+        // Shake detection works 24/7 in background — no camera needed
+        sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        accelerometer = sensorManager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+        accelerometer?.let {
+            sensorManager?.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL)
+            Log.d(TAG, "✅ Shake detection started")
+        }
+
+        Log.d(TAG, "✅ RakshaForegroundService created")
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        when (intent?.action) {
-            ACTION_START_LISTENER -> startDetection()
-            "EMERGENCY_TRIGGERED" -> {
-                val trigger = intent.getStringExtra("trigger") ?: "Unknown"
-                Log.d(TAG, "Emergency received: $trigger")
-                triggerEmergency(trigger)
-            }
+        Log.d(TAG, "onStartCommand: action=${intent?.action}")
+
+        val passedTriggers = intent?.getStringArrayListExtra(EXTRA_TRIGGERS)
+        if (!passedTriggers.isNullOrEmpty()) {
+            voiceTriggers.clear()
+            passedTriggers.forEach { voiceTriggers.add(it.lowercase()) }
+            Log.d(TAG, "✅ Got ${voiceTriggers.size} triggers: $voiceTriggers")
+            isListeningForVoice = false
+            speechRecognizer?.destroy()
+            speechRecognizer = null
+            startVoiceDetection()
+        } else {
+            // Always reload from Firebase — never use stale cached triggers
+            isListeningForVoice = false
+            speechRecognizer?.destroy()
+            speechRecognizer = null
+            loadTriggersFromFirebaseThenStart()
         }
-        
+
         return START_STICKY
     }
 
-    override fun onBind(intent: Intent?): IBinder? {
-        return null
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        super.onTaskRemoved(rootIntent)
+        val restartIntent = Intent(applicationContext, RakshaForegroundService::class.java).apply {
+            action = ACTION_START_LISTENER
+            putStringArrayListExtra(EXTRA_TRIGGERS, ArrayList(voiceTriggers))
+        }
+        val pendingIntent = PendingIntent.getService(
+            this, 1, restartIntent,
+            PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
+        )
+        val alarmManager = getSystemService(Context.ALARM_SERVICE) as android.app.AlarmManager
+        alarmManager.set(
+            android.app.AlarmManager.ELAPSED_REALTIME,
+            android.os.SystemClock.elapsedRealtime() + 1000,
+            pendingIntent
+        )
+        Log.d(TAG, "App removed — scheduled restart")
     }
 
-    private fun startDetection() {
-        Log.d(TAG, "Starting detection service")
-        startForeground(NOTIFICATION_ID, buildNotification())
-        
-        // Start voice detection
-        startVoiceDetection()
-        
-        Log.d(TAG, "Detection service active")
-    }
-    
-    // Load user's custom trigger words from Firebase
-    private fun loadUserTriggerWords() {
+    override fun onBind(intent: Intent?): IBinder? = null
+
+    // ── Firebase trigger loading ──────────────────────────────────────────────
+
+    private fun loadTriggersFromFirebaseThenStart() {
         try {
             val userId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
             if (userId != null) {
                 com.google.firebase.firestore.FirebaseFirestore.getInstance()
-                    .collection("users")
-                    .document(userId)
-                    .get()
-                    .addOnSuccessListener { document ->
-                        if (document.exists()) {
-                            val triggers = document.get("voiceTriggers") as? List<*>
-                            if (triggers != null) {
-                                voiceTriggers.clear()
-                                for (trigger in triggers) {
-                                    if (trigger is String) {
-                                        voiceTriggers.add(trigger)
-                                    }
-                                }
-                                Log.d(TAG, "Loaded user's trigger words: $voiceTriggers")
-                            } else {
-                                setDefaultTriggers()
-                            }
+                    .collection("users").document(userId).get()
+                    .addOnSuccessListener { doc ->
+                        val raw = doc.get("triggerVoiceWords") as? List<*>
+                            ?: doc.get("voiceTriggers") as? List<*>
+                        if (raw != null) {
+                            voiceTriggers.clear()
+                            raw.filterIsInstance<String>().forEach { voiceTriggers.add(it.lowercase()) }
+                            Log.d(TAG, "✅ Firebase triggers: $voiceTriggers")
                         } else {
                             setDefaultTriggers()
                         }
+                        // Load language preference
+                        voiceLanguage = doc.getString("voiceLanguage") ?: "en-IN"
+                        Log.d(TAG, "✅ Voice language: $voiceLanguage")
+                        startVoiceDetection()
                     }
-                    .addOnFailureListener { e ->
-                        Log.e(TAG, "Failed to load trigger words: ${e.message}")
+                    .addOnFailureListener {
                         setDefaultTriggers()
+                        startVoiceDetection()
                     }
             } else {
                 setDefaultTriggers()
+                startVoiceDetection()
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error loading trigger words: ${e.message}")
             setDefaultTriggers()
+            startVoiceDetection()
         }
-    }
-    
-    private fun setDefaultTriggers() {
-        voiceTriggers.clear()
-        voiceTriggers.add("help me")
-        voiceTriggers.add("emergency")
-        voiceTriggers.add("call police")
-        Log.d(TAG, "Using default trigger words: $voiceTriggers")
     }
 
-    private fun startVoiceDetection() {
-        try {
-            Log.d(TAG, "Starting voice detection...")
-            
-            // Load user's custom trigger words first
-            loadUserTriggerWords()
-            
-            if (SpeechRecognizer.isRecognitionAvailable(this)) {
-                // Destroy any existing recognizer
-                speechRecognizer?.destroy()
-                
-                // Create new recognizer
-                speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
-                speechRecognizer?.setRecognitionListener(this)
-                
-                // Start listening immediately
-                startContinuousListening()
-                
-                Log.d(TAG, "Voice detection started")
-            } else {
-                Log.e(TAG, "Speech recognition not available")
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error starting voice detection: ${e.message}")
-        }
+    private fun setDefaultTriggers() {
+        voiceTriggers.clear()
+        voiceTriggers.addAll(listOf("help", "danger", "emergency", "police", "rescue"))
     }
-    
-    private fun startContinuousListening() {
-        if (isListeningForVoice) {
-            Log.d(TAG, "Already listening for voice")
+
+    // ── Voice detection ───────────────────────────────────────────────────────
+
+    private fun startVoiceDetection() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (checkSelfPermission(android.Manifest.permission.RECORD_AUDIO)
+                != PackageManager.PERMISSION_GRANTED) {
+                Log.e(TAG, "❌ RECORD_AUDIO not granted — retrying in 30s")
+                handler.postDelayed({ startVoiceDetection() }, 30000)
+                return
+            }
+        }
+        if (!SpeechRecognizer.isRecognitionAvailable(this)) {
+            Log.e(TAG, "❌ Speech recognition not available")
             return
         }
-        
+        Log.d(TAG, "🎤 Starting SpeechRecognizer with: $voiceTriggers")
+        speechRecognizer?.destroy()
+        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
+        speechRecognizer?.setRecognitionListener(this)
+        handler.postDelayed({ startContinuousListening() }, 500)
+    }
+
+    private fun startContinuousListening() {
+        if (isListeningForVoice) return
         try {
-            Log.d(TAG, "Starting continuous voice listening...")
-            
             val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
                 putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-US")
+                // Use device language — supports all Indian languages
+                putExtra(RecognizerIntent.EXTRA_LANGUAGE, voiceLanguage)
+                putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, voiceLanguage)
+                // Also accept other languages
+                putExtra("android.speech.extra.EXTRA_ADDITIONAL_LANGUAGES", arrayOf(
+                    "hi-IN", "bn-IN", "ta-IN", "te-IN", "kn-IN",
+                    "ml-IN", "mr-IN", "gu-IN", "pa-IN", "or-IN", "ur-IN", "en-IN"
+                ))
+                putExtra(RecognizerIntent.EXTRA_ONLY_RETURN_LANGUAGE_PREFERENCE, false)
                 putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
                 putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5)
                 putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, packageName)
             }
-            
             isListeningForVoice = true
             speechRecognizer?.startListening(intent)
-            Log.d(TAG, "Voice listening started")
-            
+            Log.d(TAG, "🎤 Listening... triggers=$voiceTriggers")
         } catch (e: Exception) {
-            Log.e(TAG, "Error starting continuous listening: ${e.message}")
+            Log.e(TAG, "Error: ${e.message}")
             isListeningForVoice = false
+            handler.postDelayed({ startContinuousListening() }, 3000)
         }
     }
-    
-    // RecognitionListener implementation
-    override fun onReadyForSpeech(params: Bundle?) {
-        Log.d(TAG, "Voice ready")
-    }
-    
-    override fun onBeginningOfSpeech() {
-        Log.d(TAG, "Speech started")
-    }
-    
-    override fun onRmsChanged(rmsdB: Float) {
-        // Sound level monitoring
-    }
-    
-    override fun onBufferReceived(buffer: ByteArray?) {
-        // Audio buffer received
-    }
-    
-    override fun onEndOfSpeech() {
-        Log.d(TAG, "Speech ended")
-    }
-    
+
+    // ── RecognitionListener ───────────────────────────────────────────────────
+
+    override fun onReadyForSpeech(params: Bundle?) { Log.d(TAG, "🎤 Ready") }
+    override fun onBeginningOfSpeech() {}
+    override fun onRmsChanged(rmsdB: Float) {}
+    override fun onBufferReceived(buffer: ByteArray?) {}
+    override fun onEndOfSpeech() {}
+    override fun onEvent(eventType: Int, params: Bundle?) {}
+
     override fun onError(error: Int) {
-        Log.e(TAG, "Speech error: $error")
         isListeningForVoice = false
-        // Restart listening after error
-        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-            startContinuousListening()
-        }, 2000)
+        val delay = when (error) {
+            SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> 3000L
+            SpeechRecognizer.ERROR_NO_MATCH, SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> 300L
+            SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> 30000L
+            else -> 2000L
+        }
+        Log.d(TAG, "Speech error: $error — retrying in ${delay}ms")
+        handler.postDelayed({ startContinuousListening() }, delay)
     }
-    
+
     override fun onResults(results: Bundle?) {
+        isListeningForVoice = false
         val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-        if (matches != null && matches.isNotEmpty()) {
+        if (!matches.isNullOrEmpty()) {
             for (match in matches) {
-                val spokenText = match.lowercase()
-                Log.d(TAG, "Heard: '$spokenText'")
-                
-                // Check user's custom triggers
-                for (trigger in voiceTriggers) {
-                    if (spokenText.contains(trigger.lowercase())) {
-                        Log.d(TAG, "Voice emergency detected: '$trigger'")
-                        triggerVoiceEmergency(trigger, spokenText)
-                        return
-                    }
-                }
-                
-                // Check common emergency words
-                val emergencyWords = arrayOf("help", "emergency", "police", "danger", "rescue", "sos")
-                for (word in emergencyWords) {
-                    if (spokenText.contains(word)) {
-                        Log.d(TAG, "Emergency word detected: '$word'")
-                        triggerVoiceEmergency(word, spokenText)
-                        return
-                    }
-                }
+                val spoken = match.trim()
+                Log.d(TAG, "🎤 Heard: '$spoken'")
+                // Run NLP distress detection pipeline
+                analyzeForDistress(spoken)
             }
         }
-        
-        // Restart listening for continuous detection
-        isListeningForVoice = false
-        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-            startContinuousListening()
-        }, 500)
+        handler.postDelayed({ startContinuousListening() }, 300)
     }
-    
+
     override fun onPartialResults(partialResults: Bundle?) {
         val matches = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-        if (matches != null && matches.isNotEmpty()) {
-            val spokenText = matches[0].lowercase()
-            Log.d(TAG, "Partial: '$spokenText'")
-            
-            // Quick partial matching for faster detection
-            if (spokenText.contains("help") || 
-                spokenText.contains("emergency") ||
-                spokenText.contains("police")) {
-                
-                Log.d(TAG, "Voice emergency detected (partial): '$spokenText'")
-                triggerVoiceEmergency("emergency", spokenText)
+        if (!matches.isNullOrEmpty()) {
+            val spoken = matches[0].trim()
+            // Quick check on partial results too
+            analyzeForDistress(spoken)
+        }
+    }
+
+    // ── NLP Distress Detection Pipeline ──────────────────────────────────────
+
+    private val distressKeywords = setOf(
+        // English distress phrases
+        "help", "danger", "emergency", "police", "rescue", "attack",
+        "fire", "thief", "accident", "hurt", "pain", "scared", "afraid",
+        "threat", "weapon", "knife", "gun", "bleeding", "unconscious",
+        "following me", "chasing", "kidnap", "assault", "rape", "murder",
+        "save me", "call police", "need help", "please help", "someone help",
+        "let me go", "don't hurt", "stop it", "leave me", "get away"
+    )
+
+    private fun analyzeForDistress(spokenText: String) {
+        if (spokenText.length < 2) return
+
+        // Step 1: Check user's saved trigger words first (fastest path)
+        val spokenLower = spokenText.lowercase()
+        val cleaned = spokenLower.replace("raksha", "").trim()
+        for (trigger in voiceTriggers) {
+            if (spokenLower.contains(trigger) || cleaned.contains(trigger)) {
+                Log.d(TAG, "🚨 TRIGGER WORD MATCH: '$trigger'")
+                triggerEmergency("Voice: $trigger", spokenText)
+                handler.postDelayed({ startContinuousListening() }, 20000)
+                return
+            }
+        }
+
+        // Step 2: ML Kit language detection → translate → distress check
+        val languageIdentifier = com.google.mlkit.nl.languageid.LanguageIdentification.getClient()
+        languageIdentifier.identifyLanguage(spokenText)
+            .addOnSuccessListener { languageCode ->
+                Log.d(TAG, "🌐 Detected language: $languageCode")
+                if (languageCode == "en" || languageCode == "und") {
+                    // Already English or unknown — check directly
+                    checkEnglishForDistress(spokenText)
+                } else {
+                    // Translate to English first
+                    translateToEnglish(spokenText, languageCode)
+                }
+            }
+            .addOnFailureListener {
+                // Fallback: check as-is
+                checkEnglishForDistress(spokenText)
+            }
+    }
+
+    private fun translateToEnglish(text: String, sourceLang: String) {
+        // Use MyMemory free translation API (no key needed, 1000 req/day)
+        val encodedText = java.net.URLEncoder.encode(text, "UTF-8")
+        val url = "https://api.mymemory.translated.net/get?q=$encodedText&langpair=$sourceLang|en"
+
+        Thread {
+            try {
+                val connection = java.net.URL(url).openConnection() as java.net.HttpURLConnection
+                connection.connectTimeout = 3000
+                connection.readTimeout = 3000
+                val response = connection.inputStream.bufferedReader().readText()
+                val json = org.json.JSONObject(response)
+                val translated = json.getJSONObject("responseData")
+                    .getString("translatedText")
+                Log.d(TAG, "🌐 Translated: '$text' → '$translated'")
+                handler.post { checkEnglishForDistress(translated) }
+            } catch (e: Exception) {
+                Log.e(TAG, "Translation failed: ${e.message}")
+                // Fallback: check original text
+                handler.post { checkEnglishForDistress(text) }
+            }
+        }.start()
+    }
+
+    private fun checkEnglishForDistress(text: String) {
+        val lower = text.lowercase()
+        for (keyword in distressKeywords) {
+            if (lower.contains(keyword)) {
+                Log.d(TAG, "🚨 NLP DISTRESS DETECTED: '$keyword' in '$lower'")
+                triggerEmergency("Distress: $keyword", text)
+                handler.postDelayed({ startContinuousListening() }, 20000)
+                return
+            }
+        }
+        Log.d(TAG, "✅ No distress detected in: '$lower'")
+    }
+
+    // ── Shake detection ───────────────────────────────────────────────────────
+
+    override fun onSensorChanged(event: SensorEvent?) {
+        if (event?.sensor?.type != Sensor.TYPE_ACCELEROMETER) return
+        val x = event.values[0]; val y = event.values[1]; val z = event.values[2]
+        val accel = sqrt((x * x + y * y + z * z).toDouble()).toFloat() - SensorManager.GRAVITY_EARTH
+        if (accel > SHAKE_THRESHOLD) {
+            val now = System.currentTimeMillis()
+            if (now - lastShakeTime > SHAKE_RESET_MS) shakeCount = 0
+            shakeCount++
+            lastShakeTime = now
+            if (shakeCount >= SHAKE_COUNT_REQUIRED) {
+                shakeCount = 0
+                Log.d(TAG, "🚨 SHAKE TRIGGER!")
+                triggerEmergency("Shake", "device shaken")
             }
         }
     }
-    
-    override fun onEvent(eventType: Int, params: Bundle?) {
-        // Speech events
-    }
-    
-    private fun triggerVoiceEmergency(trigger: String, fullText: String) {
+
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+
+    // ── Emergency trigger ─────────────────────────────────────────────────────
+
+    private fun triggerEmergency(trigger: String, fullText: String) {
+        val now = System.currentTimeMillis()
+        if (now - lastTriggerTime < TRIGGER_COOLDOWN_MS) {
+            Log.d(TAG, "⏳ Cooldown — ignoring '$trigger'")
+            return
+        }
+        lastTriggerTime = now
+
         try {
-            Log.d(TAG, "Triggering voice emergency: '$trigger' from '$fullText'")
-            
-            // Send broadcast to MainActivity
-            val intent = Intent("com.example.raksha.EMERGENCY_GESTURE").apply {
-                putExtra("gesture", "VOICE: $trigger")
-                putExtra("source", "voice")
-                putExtra("type", "voice_trigger")
-                putExtra("fullText", fullText)
-                putExtra("timestamp", System.currentTimeMillis())
+            handler.post {
+                android.widget.Toast.makeText(this, "🚨 $trigger", android.widget.Toast.LENGTH_LONG).show()
             }
-            sendBroadcast(intent)
-            
-            // Vibrate to alert user
+
+            // Start SOSNotificationService — shows 10s countdown notification with CANCEL button
+            val sosIntent = Intent(this, SOSNotificationService::class.java).apply {
+                putExtra("TRIGGER_WORD", trigger)
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(sosIntent)
+            } else {
+                startService(sosIntent)
+            }
+
+            sendBroadcast(Intent("com.example.raksha.EMERGENCY_GESTURE").apply {
+                putExtra("gesture", trigger)
+                putExtra("source", "background_service")
+                putExtra("fullText", fullText)
+                putExtra("timestamp", now)
+            })
+
             val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                val vibratorManager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as android.os.VibratorManager
-                vibratorManager.defaultVibrator
+                (getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as android.os.VibratorManager).defaultVibrator
             } else {
                 @Suppress("DEPRECATION")
                 getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
@@ -295,148 +422,46 @@ class RakshaForegroundService : Service(), RecognitionListener {
                 @Suppress("DEPRECATION")
                 vibrator.vibrate(longArrayOf(0, 500, 200, 500), -1)
             }
-            
         } catch (e: Exception) {
-            Log.e(TAG, "Error triggering voice emergency: ${e.message}")
+            Log.e(TAG, "Error triggering: ${e.message}")
         }
     }
 
-    private fun triggerEmergency(gestureName: String) {
-        Log.d(TAG, "Emergency triggered by: $gestureName")
-        
-        // Send emergency SMS
-        sendEmergencySMS(gestureName)
-        
-        // Start emergency vibration
-        startEmergencyVibration()
-        
-        // Show confirmation notification
-        showEmergencyNotification(gestureName)
-        
-        // Broadcast emergency to MainActivity
-        val emergencyIntent = Intent("com.example.raksha.EMERGENCY_GESTURE")
-        emergencyIntent.putExtra("gesture", gestureName)
-        emergencyIntent.putExtra("source", "ForegroundService")
-        sendBroadcast(emergencyIntent)
-    }
-    
-    private fun sendEmergencySMS(gestureName: String) {
-        try {
-            Log.d(TAG, "Sending emergency SMS...")
-            
-            val emergencyMessage = "🚨 EMERGENCY ALERT! Gesture detected: $gestureName. I need help immediately! This is an automated message from Raksha Safety App."
-            
-            // TODO: Get real emergency contacts from Firebase
-            val emergencyContacts = arrayOf("+1234567890", "+0987654321")
-            
-            @Suppress("DEPRECATION")
-            val smsManager = SmsManager.getDefault()
-            for (phoneNumber in emergencyContacts) {
-                try {
-                    smsManager.sendTextMessage(phoneNumber, null, emergencyMessage, null, null)
-                    Log.d(TAG, "Emergency SMS sent to: $phoneNumber")
-                } catch (e: Exception) {
-                    Log.e(TAG, "Failed to send SMS to $phoneNumber: ${e.message}")
-                }
-            }
-            
-        } catch (e: Exception) {
-            Log.e(TAG, "Error sending emergency SMS: ${e.message}")
-        }
-    }
-    
-    private fun showEmergencyNotification(gestureName: String) {
-        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("🚨 EMERGENCY ACTIVATED!")
-            .setContentText("Gesture: $gestureName - Emergency SMS sent")
-            .setSmallIcon(android.R.drawable.ic_dialog_alert)
-            .setPriority(NotificationCompat.PRIORITY_MAX)
-            .setCategory(NotificationCompat.CATEGORY_ALARM)
-            .setAutoCancel(false)
-            .setOngoing(true)
-            .build()
-            
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.notify(999, notification)
-    }
-    
-    private fun startEmergencyVibration() {
-        try {
-            val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                val vibratorManager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as android.os.VibratorManager
-                vibratorManager.defaultVibrator
-            } else {
-                @Suppress("DEPRECATION")
-                getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                vibrator.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 1000, 500, 1000, 500), 0))
-            } else {
-                @Suppress("DEPRECATION")
-                vibrator.vibrate(longArrayOf(0, 1000, 500, 1000, 500), 0)
-            }
-            Log.d(TAG, "Emergency vibration started")
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to start vibration: ${e.message}")
-        }
-    }
+    // ── Notifications ─────────────────────────────────────────────────────────
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
-                CHANNEL_ID,
-                "Raksha Gesture Detection",
-                NotificationManager.IMPORTANCE_LOW
-            )
-            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
+                CHANNEL_ID, "Raksha Protection", NotificationManager.IMPORTANCE_LOW
+            ).apply { setShowBadge(false) }
+            (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
+                .createNotificationChannel(channel)
         }
     }
 
-    private fun buildNotification(): Notification {
+    private fun createPersistentNotification(): Notification {
+        val pendingIntent = PendingIntent.getActivity(
+            this, 0, Intent(this, MainActivity::class.java),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("🛡️ Raksha Active")
-            .setContentText("Voice detection active")
+            .setContentText("Voice & shake detection running")
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setOngoing(true)
             .setPriority(NotificationCompat.PRIORITY_LOW)
-            .setShowWhen(false)
+            .setContentIntent(pendingIntent)
+            .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
             .build()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        
-        // Clean up speech recognizer
+        sensorManager?.unregisterListener(this)
+        try { unregisterReceiver(safeReceiver) } catch (e: Exception) { }
         speechRecognizer?.destroy()
-        
-        // Release wake lock
-        wakeLock?.let {
-            if (it.isHeld) {
-                it.release()
-            }
-        }
-        
-        Log.d(TAG, "RakshaForegroundService destroyed")
-    }
-    
-    // Create persistent notification to keep service active
-    private fun createPersistentNotification(): Notification {
-        val intent = Intent(this, MainActivity::class.java)
-        val pendingIntent = PendingIntent.getActivity(
-            this, 0, intent, 
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-        
-        return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("🛡️ Raksha Protection Active")
-            .setContentText("🎤 Voice detection across ALL apps - Say 'help me' for emergency")
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setOngoing(true)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setCategory(NotificationCompat.CATEGORY_SERVICE)
-            .setContentIntent(pendingIntent)
-            .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
-            .build()
+        handler.removeCallbacksAndMessages(null)
+        wakeLock?.let { if (it.isHeld) it.release() }
+        Log.d(TAG, "Service destroyed — START_STICKY will restart")
     }
 }

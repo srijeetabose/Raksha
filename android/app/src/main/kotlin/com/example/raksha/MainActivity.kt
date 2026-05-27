@@ -9,6 +9,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.speech.RecognitionListener
@@ -88,10 +89,33 @@ class MainActivity :
             registerReceiver(emergencyReceiver, filter)
         }
         
+        // Request battery optimization exemption so service runs 24/7
+        requestBatteryOptimizationExemption()
+        
+        // Pre-load user's selected gestures from Firebase
+        loadUserGesturesFromFirebase()
+        
         // Handle intent extras for SOS cancellation
         handleSOSIntentExtras()
         
         Log.d("MainActivity", "✅ Emergency broadcast receiver registered")
+    }
+
+    private fun requestBatteryOptimizationExemption() {
+        try {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                val pm = getSystemService(android.os.PowerManager::class.java)
+                if (!pm.isIgnoringBatteryOptimizations(packageName)) {
+                    val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                        data = android.net.Uri.parse("package:$packageName")
+                    }
+                    startActivity(intent)
+                    Log.d("MainActivity", "✅ Requested battery optimization exemption")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("MainActivity", "Battery optimization request failed: ${e.message}")
+        }
     }
     
     private fun handleSOSIntentExtras() {
@@ -174,7 +198,16 @@ class MainActivity :
                         result.success("Trigger cancelled")
                     }
                     "startListener" -> {
-                        Log.d("MainActivity", "Background service started")
+                        val gestures = call.argument<List<String>>("gestures") ?: emptyList()
+                        val voiceWords = call.argument<List<String>>("voiceWords") ?: emptyList()
+                        // Start/restart the foreground service with the latest triggers
+                        val serviceIntent = Intent(this, RakshaForegroundService::class.java).apply {
+                            action = RakshaForegroundService.ACTION_START_LISTENER
+                            putStringArrayListExtra(RakshaForegroundService.EXTRA_TRIGGERS, ArrayList(voiceWords))
+                            putStringArrayListExtra("GESTURES_KEY", ArrayList(gestures))
+                        }
+                        startForegroundService(serviceIntent)
+                        Log.d("MainActivity", "✅ Background service started via startListener with ${voiceWords.size} voice triggers")
                         result.success("Background service started")
                     }
                     "sendTestAlert" -> {
@@ -215,6 +248,40 @@ class MainActivity :
                     "stopEmergencyRecording" -> {
                         stopStealthRecording()
                         result.success("Emergency recording stopped")
+                    }
+                    "sendIAmSafeBroadcast" -> {
+                        sendBroadcast(Intent("com.example.raksha.I_AM_SAFE"))
+                        Log.d("MainActivity", "✅ I AM SAFE broadcast sent")
+                        result.success("Safe broadcast sent")
+                    }
+                    "openUrl" -> {
+                        val url = call.argument<String>("url") ?: ""
+                        try {
+                            val intent = Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url))
+                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                            startActivity(intent)
+                            result.success("Opened")
+                        } catch (e: Exception) {
+                            result.error("ERROR", e.message, null)
+                        }
+                    }
+                    "openVideoFile" -> {
+                        val path = call.argument<String>("path") ?: ""
+                        try {
+                            val file = java.io.File(path)
+                            val uri = androidx.core.content.FileProvider.getUriForFile(
+                                this, "${packageName}.fileprovider", file
+                            )
+                            val intent = Intent(Intent.ACTION_VIEW).apply {
+                                setDataAndType(uri, "video/mp4")
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            startActivity(Intent.createChooser(intent, "Play Video"))
+                            result.success("Opened")
+                        } catch (e: Exception) {
+                            result.error("ERROR", e.message, null)
+                        }
                     }
                     "testSMSSystem" -> {
                         val phoneNumber = call.argument<String>("phoneNumber") ?: ""
@@ -449,14 +516,94 @@ class MainActivity :
                         result.error("ERROR", "Failed to open settings: ${e.message}", null)
                     }
                 }
+        
+        // Playback Channel
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "com.raksha/playback")
+                .setMethodCallHandler { call, result ->
+                    try {
+                        when (call.method) {
+                            "checkAndPlayRecording" -> {
+                                val audioPath = call.argument<String>("audioPath")
+                                val videoPath = call.argument<String>("videoPath")
+                                val gesture = call.argument<String>("gesture") ?: "Unknown"
+                                
+                                Log.d("MainActivity", "🎵 ========== CHECK AND PLAY ==========")
+                                Log.d("MainActivity", "Audio path: $audioPath")
+                                Log.d("MainActivity", "Video path: $videoPath")
+                                
+                                // Check if files exist
+                                val audioFile = if (audioPath != null) java.io.File(audioPath) else null
+                                val videoFile = if (videoPath != null) java.io.File(videoPath) else null
+                                
+                                Log.d("MainActivity", "Audio file exists: ${audioFile?.exists()}, size: ${audioFile?.length() ?: 0} bytes")
+                                Log.d("MainActivity", "Video file exists: ${videoFile?.exists()}, size: ${videoFile?.length() ?: 0} bytes")
+                                
+                                // List all files in secure vault directory
+                                val secureVaultDir = java.io.File(filesDir, ".secure_vault")
+                                if (secureVaultDir.exists()) {
+                                    Log.d("MainActivity", "📂 Secure vault directory exists")
+                                    val files = secureVaultDir.listFiles()
+                                    if (files != null && files.isNotEmpty()) {
+                                        Log.d("MainActivity", "📂 Files in secure vault: ${files.size}")
+                                        var totalSize = 0L
+                                        var emptyFiles = 0
+                                        files.forEach { file ->
+                                            Log.d("MainActivity", "  - ${file.name} (${file.length()} bytes)")
+                                            totalSize += file.length()
+                                            if (file.length() == 0L) emptyFiles++
+                                        }
+                                        Log.d("MainActivity", "📊 Total size: $totalSize bytes, Empty files: $emptyFiles")
+                                        
+                                        // Show toast with file info
+                                        android.widget.Toast.makeText(
+                                            this,
+                                            "📂 Vault: ${files.size} files\n💾 Total: ${totalSize / 1024}KB\n⚠️ Empty: $emptyFiles",
+                                            android.widget.Toast.LENGTH_LONG
+                                        ).show()
+                                    } else {
+                                        Log.e("MainActivity", "❌ Secure vault directory is EMPTY!")
+                                        android.widget.Toast.makeText(
+                                            this,
+                                            "❌ Secure vault is EMPTY!\n\nRecording is NOT working.\nCheck camera/microphone permissions.",
+                                            android.widget.Toast.LENGTH_LONG
+                                        ).show()
+                                    }
+                                } else {
+                                    Log.e("MainActivity", "❌ Secure vault directory does NOT exist!")
+                                    android.widget.Toast.makeText(
+                                        this,
+                                        "❌ Secure vault directory doesn't exist!\n\nRecording service never started.",
+                                        android.widget.Toast.LENGTH_LONG
+                                    ).show()
+                                }
+                                
+                                // Try to play
+                                if (audioFile?.exists() == true || videoFile?.exists() == true) {
+                                    playRecordingSimple(audioPath, videoPath, gesture)
+                                    result.success("Playing recording")
+                                } else {
+                                    Log.e("MainActivity", "❌ NO FILES FOUND - Recording may have failed!")
+                                    android.widget.Toast.makeText(this, "❌ Recording files not found. Recording may have failed.", android.widget.Toast.LENGTH_LONG).show()
+                                    result.error("NO_FILES", "Recording files not found. Recording may have failed.", null)
+                                }
+                            }
+                            else -> result.notImplemented()
+                        }
+                    } catch (e: Exception) {
+                        Log.e("MainActivity", "❌ Playback error: ${e.message}")
+                        e.printStackTrace()
+                        result.error("ERROR", "Failed to play recording: ${e.message}", null)
+                    }
+                }
     }
 
     private fun startGestureDetectionService(gestures: List<String>) {
-        val intent =
-                Intent(this, RakshaForegroundService::class.java).apply {
-                    action = RakshaForegroundService.ACTION_START_LISTENER
-                    putStringArrayListExtra("GESTURES_KEY", ArrayList(gestures))
-                }
+        val intent = Intent(this, RakshaForegroundService::class.java).apply {
+            action = RakshaForegroundService.ACTION_START_LISTENER
+            putStringArrayListExtra("GESTURES_KEY", ArrayList(gestures))
+            // Also pass current voice triggers so service has them immediately
+            putStringArrayListExtra(RakshaForegroundService.EXTRA_TRIGGERS, ArrayList(voiceTriggers))
+        }
         startForegroundService(intent)
     }
 
@@ -775,9 +922,9 @@ class MainActivity :
             if (gestureHelper == null) {
                 Log.d("MainActivity", "🔄 Creating new GestureRecognizerHelper...")
                 gestureHelper = GestureRecognizerHelper(
-                    minHandDetectionConfidence = 0.5f, // Lower threshold
-                    minHandTrackingConfidence = 0.5f,
-                    minHandPresenceConfidence = 0.5f,
+                    minHandDetectionConfidence = 0.3f,
+                    minHandTrackingConfidence = 0.3f,
+                    minHandPresenceConfidence = 0.3f,
                     currentDelegate = GestureRecognizerHelper.DELEGATE_CPU,
                     runningMode = com.google.mediapipe.tasks.vision.core.RunningMode.IMAGE,
                     context = this,
@@ -792,9 +939,9 @@ class MainActivity :
                     Log.w("MainActivity", "⚠️ First initialization failed, retrying...")
                     gestureHelper?.clearGestureRecognizer()
                     gestureHelper = GestureRecognizerHelper(
-                        minHandDetectionConfidence = 0.5f,
-                        minHandTrackingConfidence = 0.5f,
-                        minHandPresenceConfidence = 0.5f,
+                        minHandDetectionConfidence = 0.3f,
+                        minHandTrackingConfidence = 0.3f,
+                        minHandPresenceConfidence = 0.3f,
                         currentDelegate = GestureRecognizerHelper.DELEGATE_CPU,
                         runningMode = com.google.mediapipe.tasks.vision.core.RunningMode.IMAGE,
                         context = this,
@@ -832,6 +979,14 @@ class MainActivity :
                         "confidence" to confidence.toDouble(),
                         "timestamp" to System.currentTimeMillis()
                     )
+
+                    // Check if this is an emergency gesture (user's selected gestures)
+                    val isEmergencyGesture = checkIfEmergencyGesture(gestureName, confidence)
+                    
+                    if (isEmergencyGesture && !isTestMode) {
+                        Log.d("MainActivity", "🚨 EMERGENCY GESTURE DETECTED - Launching full-screen popup!")
+                        launchFullScreenCountdown(gestureName)
+                    }
 
                     // If test mode is active, send test alert
                     if (isTestMode) {
@@ -875,18 +1030,83 @@ class MainActivity :
         Log.d("MainActivity", "🧪 Test mode enabled - next gesture detection will send test alert")
     }
 
-    // Start voice detection
+    private fun checkIfEmergencyGesture(gestureName: String, confidence: Float): Boolean {
+        if (confidence < 0.5f) return false
+
+        val mappedGesture = when (gestureName.lowercase()) {
+            "victory", "peace", "peace_sign", "v_sign" -> "Victory"
+            "thumb_up", "thumbs_up" -> "Thumb_Up"
+            "thumb_down", "thumbs_down" -> "Thumb_Down"
+            "closed_fist", "fist" -> "Closed_Fist"
+            else -> gestureName
+        }
+
+        // Trigger on any of the 4 supported gestures
+        return mappedGesture in listOf("Victory", "Thumb_Up", "Thumb_Down", "Closed_Fist")
+    }
+
+    private var userSelectedGestures = mutableListOf<String>()
+
+    private fun loadUserGesturesFromFirebase() {
+        try {
+            val userId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: return
+            com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                .collection("users").document(userId).get()
+                .addOnSuccessListener { doc ->
+                    val gestures = doc.get("triggerGestures") as? List<*>
+                        ?: doc.get("selectedGestures") as? List<*>
+                    if (gestures != null) {
+                        userSelectedGestures.clear()
+                        gestures.filterIsInstance<String>().forEach { userSelectedGestures.add(it) }
+                        Log.d("MainActivity", "✅ Loaded user gestures: $userSelectedGestures")
+                    } else {
+                        // Default: all gestures trigger SOS
+                        userSelectedGestures.addAll(listOf("Victory", "Thumb_Up", "Thumb_Down", "Closed_Fist"))
+                        Log.d("MainActivity", "⚠️ No gestures saved — using all as default")
+                    }
+                }
+                .addOnFailureListener {
+                    userSelectedGestures.addAll(listOf("Victory", "Thumb_Up", "Thumb_Down", "Closed_Fist"))
+                }
+        } catch (e: Exception) {
+            Log.e("MainActivity", "Error loading gestures: ${e.message}")
+        }
+    }
+
+    private fun launchFullScreenCountdown(gestureName: String) {
+        try {
+            Log.d("MainActivity", "🚀 Starting SOS notification countdown for gesture: $gestureName")
+            
+            // Start notification service for 10-second countdown
+            val intent = Intent(this, SOSNotificationService::class.java).apply {
+                putExtra("TRIGGER_WORD", "Gesture: $gestureName")
+            }
+            
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(intent)
+            } else {
+                startService(intent)
+            }
+            
+            Log.d("MainActivity", "✅ SOS notification service started")
+        } catch (e: Exception) {
+            Log.e("MainActivity", "❌ Error launching countdown: ${e.message}")
+            e.printStackTrace()
+        }
+    }
+
+    // Start voice detection — delegates entirely to RakshaForegroundService
     private fun startVoiceDetection(triggers: List<String>) {
         voiceTriggers = triggers
-        Log.d("MainActivity", "🎤 Starting voice detection with triggers: $triggers")
+        Log.d("MainActivity", "🎤 Starting voice detection with ${triggers.size} triggers: $triggers")
 
-        if (SpeechRecognizer.isRecognitionAvailable(this)) {
-            speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
-            speechRecognizer?.setRecognitionListener(this)
-            startListening()
-        } else {
-            Log.e("MainActivity", "❌ Speech recognition not available")
+        // Start/update the foreground service with triggers
+        val serviceIntent = Intent(this, RakshaForegroundService::class.java).apply {
+            action = RakshaForegroundService.ACTION_START_LISTENER
+            putStringArrayListExtra(RakshaForegroundService.EXTRA_TRIGGERS, ArrayList(triggers))
         }
+        startForegroundService(serviceIntent)
+        Log.d("MainActivity", "✅ RakshaForegroundService started with triggers")
     }
 
     // Stop voice detection
@@ -895,6 +1115,15 @@ class MainActivity :
         speechRecognizer?.stopListening()
         speechRecognizer?.destroy()
         speechRecognizer = null
+        
+        // Stop the voice listener activity via broadcast
+        try {
+            val intent = Intent("com.example.raksha.STOP_VOICE_LISTENER")
+            sendBroadcast(intent)
+            Log.d("MainActivity", "🛑 Sent stop broadcast to voice listener")
+        } catch (e: Exception) {
+            Log.e("MainActivity", "Error stopping voice listener: ${e.message}")
+        }
         Log.d("MainActivity", "🛑 Voice detection stopped")
     }
 
@@ -1190,20 +1419,6 @@ class MainActivity :
         }
     }
     
-    private fun requestBatteryOptimizationExemption() {
-        try {
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-                val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
-                intent.data = android.net.Uri.parse("package:$packageName")
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                startActivity(intent)
-                Log.d("MainActivity", "✅ Requested battery optimization exemption")
-            }
-        } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Failed to request battery optimization exemption: ${e.message}")
-        }
-    }
-    
     private fun requestOverlayPermission() {
         try {
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
@@ -1242,6 +1457,162 @@ class MainActivity :
             Log.d("MainActivity", "✅ Opened overlay settings")
         } catch (e: Exception) {
             Log.e("MainActivity", "❌ Failed to open overlay settings: ${e.message}")
+        }
+    }
+    
+    // Play recording from secure vault
+    private fun playRecording(audioPath: String?, videoPath: String?, gesture: String) {
+        try {
+            Log.d("MainActivity", "🎵 ========== PLAYING RECORDING ==========")
+            Log.d("MainActivity", "Audio: $audioPath")
+            Log.d("MainActivity", "Video: $videoPath")
+            
+            // Check which file exists
+            val audioFile = if (audioPath != null) java.io.File(audioPath) else null
+            val videoFile = if (videoPath != null) java.io.File(videoPath) else null
+            
+            Log.d("MainActivity", "Audio exists: ${audioFile?.exists()}")
+            Log.d("MainActivity", "Video exists: ${videoFile?.exists()}")
+            
+            // Choose file to play (prefer video)
+            val fileToPlay = when {
+                videoFile?.exists() == true -> videoFile
+                audioFile?.exists() == true -> audioFile
+                else -> {
+                    Log.e("MainActivity", "❌ No valid files found")
+                    android.widget.Toast.makeText(this, "❌ Recording file not found", android.widget.Toast.LENGTH_LONG).show()
+                    return
+                }
+            }
+            
+            Log.d("MainActivity", "📂 Playing file: ${fileToPlay.absolutePath}")
+            Log.d("MainActivity", "📂 File size: ${fileToPlay.length()} bytes")
+            
+            // Create URI using FileProvider
+            val fileUri = androidx.core.content.FileProvider.getUriForFile(
+                this,
+                "${packageName}.fileprovider",
+                fileToPlay
+            )
+            
+            Log.d("MainActivity", "📂 File URI: $fileUri")
+            
+            // Create intent to open with system media player
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(fileUri, if (fileToPlay.extension == "mp4") "video/*" else "audio/*")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            
+            // Check if there's an app that can handle this
+            if (intent.resolveActivity(packageManager) != null) {
+                startActivity(Intent.createChooser(intent, "Play Recording"))
+                Log.d("MainActivity", "✅ Media player launched")
+            } else {
+                Log.e("MainActivity", "❌ No app found to play media")
+                android.widget.Toast.makeText(this, "❌ No media player app found", android.widget.Toast.LENGTH_LONG).show()
+            }
+            
+        } catch (e: Exception) {
+            Log.e("MainActivity", "❌ Error playing recording: ${e.message}")
+            e.printStackTrace()
+            android.widget.Toast.makeText(this, "❌ Error: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
+        }
+    }
+    
+    // Play recording using PlaybackActivity
+    private fun playRecordingWithActivity(audioPath: String?, videoPath: String?, gesture: String) {
+        try {
+            Log.d("MainActivity", "🎵 Launching PlaybackActivity")
+            
+            val intent = Intent(this, PlaybackActivity::class.java).apply {
+                putExtra("audioPath", audioPath)
+                putExtra("videoPath", videoPath)
+                putExtra("gesture", gesture)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            
+            startActivity(intent)
+            Log.d("MainActivity", "✅ PlaybackActivity launched")
+            
+        } catch (e: Exception) {
+            Log.e("MainActivity", "❌ Error launching PlaybackActivity: ${e.message}")
+            e.printStackTrace()
+            android.widget.Toast.makeText(this, "❌ Error: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
+        }
+    }
+    
+    // Simple playback by copying file to Downloads and showing path
+    private fun playRecordingSimple(audioPath: String?, videoPath: String?, gesture: String) {
+        try {
+            Log.d("MainActivity", "🎵 ========== SIMPLE PLAYBACK ==========")
+            
+            // Choose file to play (prefer audio)
+            val sourceFile = when {
+                audioPath != null && java.io.File(audioPath).exists() -> java.io.File(audioPath)
+                videoPath != null && java.io.File(videoPath).exists() -> java.io.File(videoPath)
+                else -> {
+                    Log.e("MainActivity", "❌ No valid files")
+                    android.widget.Toast.makeText(this, "❌ No recording files found", android.widget.Toast.LENGTH_LONG).show()
+                    return
+                }
+            }
+            
+            Log.d("MainActivity", "📂 Source: ${sourceFile.absolutePath}")
+            Log.d("MainActivity", "📂 Size: ${sourceFile.length()} bytes (${sourceFile.length() / 1024}KB)")
+            
+            if (sourceFile.length() == 0L) {
+                android.widget.Toast.makeText(
+                    this, 
+                    "❌ File is empty (0 bytes)\n\nRecording failed!", 
+                    android.widget.Toast.LENGTH_LONG
+                ).show()
+                return
+            }
+            
+            // Copy to Downloads folder (publicly accessible)
+            val downloadsDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
+            val publicFile = java.io.File(downloadsDir, "Raksha_Emergency_${System.currentTimeMillis()}.${sourceFile.extension}")
+            
+            Log.d("MainActivity", "📂 Copying to Downloads: ${publicFile.absolutePath}")
+            sourceFile.copyTo(publicFile, overwrite = true)
+            
+            Log.d("MainActivity", "✅ Copied ${publicFile.length()} bytes")
+            
+            // Show success message with file location
+            android.widget.Toast.makeText(
+                this,
+                "✅ Recording saved to Downloads!\n\n" +
+                "File: ${publicFile.name}\n" +
+                "Size: ${publicFile.length() / 1024}KB\n\n" +
+                "Open it from your Downloads folder with any music/video player app!",
+                android.widget.Toast.LENGTH_LONG
+            ).show()
+            
+            // Try to open with VLC or any media player
+            try {
+                val intent = Intent(Intent.ACTION_VIEW).apply {
+                    setDataAndType(android.net.Uri.fromFile(publicFile), "audio/*")
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                
+                // Try to start activity
+                if (intent.resolveActivity(packageManager) != null) {
+                    startActivity(Intent.createChooser(intent, "Play with..."))
+                    Log.d("MainActivity", "✅ Opened chooser")
+                } else {
+                    Log.d("MainActivity", "No app to open, but file saved to Downloads")
+                }
+            } catch (e: Exception) {
+                Log.d("MainActivity", "Could not auto-open: ${e.message}")
+                // File is still in Downloads, user can open manually
+            }
+            
+        } catch (e: Exception) {
+            Log.e("MainActivity", "❌ Error: ${e.message}")
+            e.printStackTrace()
+            android.widget.Toast.makeText(this, "❌ Error: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
         }
     }
 
@@ -1716,7 +2087,6 @@ class MainActivity :
                 }
             }
             
-            // Create secure vault directory
             val secureVaultDir = java.io.File(filesDir, ".secure_vault")
             if (!secureVaultDir.exists()) {
                 secureVaultDir.mkdirs()
@@ -1758,7 +2128,7 @@ class MainActivity :
                 com.google.firebase.firestore.FirebaseFirestore.getInstance()
                     .collection("users")
                     .document(userId)
-                    .collection("secureVault")
+                    .collection("secureVaultRecordings")
                     .document(recordingId)
                     .update("status", status)
                     .addOnSuccessListener {
@@ -1772,16 +2142,22 @@ class MainActivity :
     
     private fun startSecureVideoRecording(recordingId: String, gesture: String, timestamp: Long) {
         try {
-            Log.d("MainActivity", "📹 Starting SECURE video recording")
+            Log.d("MainActivity", "📹 Starting SECURE video recording via StealthRecordingService")
             
-            // Start foreground service for continuous video recording
-            val intent = Intent(this, RakshaForegroundService::class.java).apply {
-                action = "START_SECURE_VIDEO_RECORDING"
+            // Release Flutter camera first to avoid conflict with Camera2
+            cameraProvider?.unbindAll()
+            
+            val intent = Intent(this, StealthRecordingService::class.java).apply {
+                action = "START_STEALTH_RECORDING"
                 putExtra("recordingId", recordingId)
                 putExtra("gesture", gesture)
                 putExtra("timestamp", timestamp)
             }
-            startForegroundService(intent)
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                startForegroundService(intent)
+            } else {
+                startService(intent)
+            }
             
             Log.d("MainActivity", "✅ SECURE video recording service started")
         } catch (e: Exception) {
@@ -1793,22 +2169,28 @@ class MainActivity :
         try {
             val userId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
             if (userId != null) {
+                val secureVaultDir = java.io.File(filesDir, ".secure_vault")
+                val audioPath = java.io.File(secureVaultDir, "${recordingId}_audio.3gp").absolutePath
+                val videoPath = java.io.File(secureVaultDir, "${recordingId}_video.mp4").absolutePath
+                
                 val recordingData = mapOf(
                     "recordingId" to recordingId,
                     "gesture" to gesture,
                     "timestamp" to timestamp,
-                    "startTime" to java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date(timestamp)),
+                    "startTime" to timestamp,
+                    "startTimeFormatted" to java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date(timestamp)),
                     "status" to "recording",
                     "hasAudio" to true,
                     "hasVideo" to true,
-                    "location" to "encrypted", // TODO: Add encrypted location
+                    "audioPath" to audioPath,
+                    "videoPath" to videoPath,
                     "deviceId" to android.provider.Settings.Secure.getString(contentResolver, android.provider.Settings.Secure.ANDROID_ID)
                 )
                 
                 com.google.firebase.firestore.FirebaseFirestore.getInstance()
                     .collection("users")
                     .document(userId)
-                    .collection("secureVault")
+                    .collection("secureVaultRecordings")
                     .document(recordingId)
                     .set(recordingData)
                     .addOnSuccessListener {
@@ -1910,7 +2292,7 @@ class MainActivity :
                 com.google.firebase.firestore.FirebaseFirestore.getInstance()
                     .collection("users")
                     .document(userId)
-                    .collection("secureVault")
+                    .collection("secureVaultRecordings")
                     .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
                     .get()
                     .addOnSuccessListener { documents ->
@@ -1959,7 +2341,7 @@ class MainActivity :
                 com.google.firebase.firestore.FirebaseFirestore.getInstance()
                     .collection("users")
                     .document(userId)
-                    .collection("secureVault")
+                    .collection("secureVaultRecordings")
                     .document(recordingId)
                     .delete()
                     .addOnSuccessListener {
@@ -2070,21 +2452,41 @@ class MainActivity :
             Log.d("MainActivity", "🛑 Stopping stealth recording")
             
             // Stop audio recording
-            currentAudioRecorder?.apply {
-                stop()
-                release()
+            try {
+                currentAudioRecorder?.stop()
+                currentAudioRecorder?.release()
+            } catch (e: Exception) {
+                Log.w("MainActivity", "Audio recorder stop: ${e.message}")
             }
             currentAudioRecorder = null
             
             // Stop video recording service
-            val intent = Intent(this, StealthRecordingService::class.java)
-            stopService(intent)
+            val intent = Intent(this, StealthRecordingService::class.java).apply {
+                action = "STOP_STEALTH_RECORDING"
+            }
+            startService(intent)
             
-            // Upload recordings to Firebase Storage
+            // Mark recording as completed in Firestore
             if (currentRecordingId != null) {
+                val userId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
+                if (userId != null) {
+                    com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                        .collection("users")
+                        .document(userId)
+                        .collection("secureVaultRecordings")
+                        .document(currentRecordingId!!)
+                        .update(mapOf(
+                            "status" to "completed",
+                            "endTime" to System.currentTimeMillis()
+                        ))
+                        .addOnSuccessListener {
+                            Log.d("MainActivity", "✅ Recording marked as completed")
+                        }
+                }
                 uploadRecordingsToCloud(currentRecordingId!!)
             }
             
+            currentRecordingId = null
             Log.d("MainActivity", "✅ Stealth recording stopped and uploading to cloud")
         } catch (e: Exception) {
             Log.e("MainActivity", "❌ Error stopping stealth recording: ${e.message}")
@@ -2730,16 +3132,20 @@ class MainActivity :
             builder.setPositiveButton("Grant Permission") { _, _ ->
                 // Request camera permission
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-                    requestPermissions(
-                        arrayOf(
-                            android.Manifest.permission.CAMERA,
-                            android.Manifest.permission.RECORD_AUDIO,
-                            android.Manifest.permission.ACCESS_FINE_LOCATION,
-                            android.Manifest.permission.ACCESS_BACKGROUND_LOCATION,
-                            android.Manifest.permission.SEND_SMS
-                        ), 
-                        1001
+                    val permissions = mutableListOf(
+                        android.Manifest.permission.CAMERA,
+                        android.Manifest.permission.RECORD_AUDIO,
+                        android.Manifest.permission.ACCESS_FINE_LOCATION,
+                        android.Manifest.permission.ACCESS_BACKGROUND_LOCATION,
+                        android.Manifest.permission.SEND_SMS
                     )
+                    
+                    // Add POST_NOTIFICATIONS for Android 13+ (API 33+)
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                        permissions.add(android.Manifest.permission.POST_NOTIFICATIONS)
+                    }
+                    
+                    requestPermissions(permissions.toTypedArray(), 1001)
                 }
                 result.success("Background camera permission requested")
             }

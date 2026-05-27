@@ -3,20 +3,47 @@ service cloud.firestore {
   match /databases/{database}/documents {
     // Users can read/write their own data
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null && request.auth.uid == userId;
+      allow delete: if request.auth != null && request.auth.uid == userId;
       
       // Emergency contacts subcollection
       match /emergency_contacts/{contactId} {
         allow read, write: if request.auth != null && request.auth.uid == userId;
       }
+      
+      // Recordings subcollection
+      match /recordings/{recordingId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+    
+    // Live locations - readable by anyone (for emergency contacts)
+    match /live_locations/{userId} {
+      allow read: if true; // Public read for emergency contacts
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // SOS alerts - readable by police officers
+    match /sos_alerts/{alertId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null;
+    }
+    
+    // Police verification
+    match /police_verification/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null; // Admins can update
     }
     
     // Emergency sessions - readable by anyone with the session ID (for emergency contacts)
-    // This allows emergency contacts to view live location without authentication
     match /emergency_sessions/{sessionId} {
       allow read: if true; // Public read access for emergency contacts
-      allow write: if request.auth != null && 
-                   request.auth.uid == resource.data.userId; // Only the user can create/update
+      allow create: if request.auth != null;
+      allow update: if request.auth != null;
     }
     
     // Default deny all other documents

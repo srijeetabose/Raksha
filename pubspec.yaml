@@ -28,12 +28,16 @@ dependencies:
   geolocator: ^11.0.0      # For continuous GPS tracking
   flutter_map: ^6.0.0      # For displaying OpenStreetMap (OSM)
   latlong2: ^0.9.0         # Coordinates for maps
+  http: ^1.2.0             # For Overpass API calls and translation
 
   # Security and Data Handling
   local_auth: ^2.1.8       # For Fingerprint/Face ID access
   crypto: ^3.0.3           # For SHA-256 PIN hashing
   image_picker: ^1.0.7     # For Police ID camera capture
   camera: ^0.10.5+9        # For camera preview and gesture detection
+  
+  # Audio/Video Playback
+  audioplayers: ^5.2.1     # For playing audio recordings
 
 dev_dependencies:
   flutter_test:

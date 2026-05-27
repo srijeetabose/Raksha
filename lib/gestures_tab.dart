@@ -194,7 +194,7 @@ class _GesturesTabState extends State<GesturesTab> {
         
         print("📥 Gesture check: $gesture (confidence: $confidence)");
         
-        if (gesture != null && gesture != "None" && confidence != null && confidence > 0.5) {
+        if (gesture != null && gesture != "None" && confidence != null && confidence > 0.3) {
           setState(() {
             _currentGesture = "✅ DETECTED: $gesture";
             _confidence = confidence;
@@ -439,41 +439,12 @@ class _GesturesTabState extends State<GesturesTab> {
   // Update detection status in UI
   void _updateDetectionStatus() {
     if (!mounted) return;
-    
-    final now = DateTime.now().millisecondsSinceEpoch;
-    
-    // Show detection activity
+
     setState(() {
       if (!_isDetecting) {
         _currentGesture = "🔍 Scanning for gestures... (${_selectedKeys.length} selected)";
       }
     });
-    
-    // Test SOS system every 15 seconds if gestures are selected
-    if (_selectedKeys.isNotEmpty && now % 15000 < 2000) { // Every 15 seconds for 2 seconds
-      final testGesture = _selectedKeys.first;
-      print("🧪 TESTING SOS SYSTEM: $testGesture");
-      
-      setState(() {
-        _currentGesture = "🧪 TESTING: $testGesture";
-        _confidence = 0.95;
-        _isDetecting = true;
-      });
-      
-      // Trigger SOS test
-      _triggerAutomaticSOS(testGesture);
-      
-      // Reset after 3 seconds
-      Future.delayed(const Duration(seconds: 3), () {
-        if (mounted) {
-          setState(() {
-            _isDetecting = false;
-            _currentGesture = '🔍 Monitoring for gestures...';
-            _confidence = 0.0;
-          });
-        }
-      });
-    }
   }
   
   // REAL gesture detection using camera frames
@@ -1111,12 +1082,9 @@ class _GesturesTabState extends State<GesturesTab> {
       });
       print("🚀 Cross-app gesture service started with gestures: $_selectedKeys");
       
-      // 3. Start cross-app voice detection
-      await platform.invokeMethod('startVoiceDetection', {
-        'triggers': ['help me', 'emergency', 'call police', 'danger', 'rescue me'],
-        'crossApp': true,
-      });
-      print("🎤 Cross-app voice detection started");
+      // 3. Voice detection is already started by user_safety_dashboard with correct triggers
+      // Don't override it here with hardcoded words
+      print("🎤 Voice detection already running with user's saved triggers");
       
       // 4. Enable system-wide detection
       await platform.invokeMethod('enableSystemWideDetection');
@@ -1582,11 +1550,23 @@ class _GesturesTabState extends State<GesturesTab> {
     try {
       print("🎤 Testing voice triggers...");
       
-      // Start voice detection
+      // Load user's actual saved triggers from Firebase
+      final userId = FirebaseAuth.instance.currentUser?.uid;
+      List<String> triggers = ['danger', 'emergency', 'help'];
+      if (userId != null) {
+        try {
+          final doc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+          if (doc.exists) {
+            triggers = (doc.data()?['triggerVoiceWords'] as List<dynamic>?)?.cast<String>()
+                ?? (doc.data()?['voiceTriggers'] as List<dynamic>?)?.cast<String>()
+                ?? triggers;
+          }
+        } catch (_) {}
+      }
+      
+      // Don't restart if already listening
       const platform = MethodChannel('com.example.raksha/gesture_service');
-      await platform.invokeMethod('startVoiceDetection', {
-        'triggers': ['help me', 'emergency', 'call police', 'danger', 'rescue me'],
-      });
+      await platform.invokeMethod('startVoiceDetection', {'triggers': triggers});
       
       if (mounted) {
         setState(() {
