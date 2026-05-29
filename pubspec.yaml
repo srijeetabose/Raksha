@@ -33,8 +33,9 @@ dependencies:
   # Security and Data Handling
   local_auth: ^2.1.8       # For Fingerprint/Face ID access
   crypto: ^3.0.3           # For SHA-256 PIN hashing
-  image_picker: ^1.0.7     # For Police ID camera capture
-  camera: ^0.10.5+9        # For camera preview and gesture detection
+  image_picker: ^1.0.7     
+  camera: ^0.10.5+9        
+  google_sign_in: ^6.2.1   # For Google Sign-In
   
   # Audio/Video Playback
   audioplayers: ^5.2.1     # For playing audio recordings
@@ -43,7 +44,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   
-  flutter_lints: ^3.0.0 # Recommended linting rules
+  flutter_lints: ^3.0.0 # Recommended linting r
   flutter_launcher_icons: ^0.13.1 # For custom app icons
   flutter_native_splash: ^2.3.10  # For custom splash screen
 

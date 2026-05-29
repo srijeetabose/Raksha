@@ -916,7 +916,7 @@ class MainActivity :
     // MediaPipe gesture recognition methods - FIXED AND ENABLED
     private fun initializeMediaPipeGestures() {
         try {
-            Log.d("MainActivity", "🚀 Initializing REAL MediaPipe gesture recognition...")
+            Log.d("MainActivity", "Initializing REAL MediaPipe gesture recognition...")
             
             // Initialize gesture helper with retry logic
             if (gestureHelper == null) {
@@ -1100,7 +1100,7 @@ class MainActivity :
         voiceTriggers = triggers
         Log.d("MainActivity", "🎤 Starting voice detection with ${triggers.size} triggers: $triggers")
 
-        // Start/update the foreground service with triggers
+        
         val serviceIntent = Intent(this, RakshaForegroundService::class.java).apply {
             action = RakshaForegroundService.ACTION_START_LISTENER
             putStringArrayListExtra(RakshaForegroundService.EXTRA_TRIGGERS, ArrayList(triggers))
@@ -2673,7 +2673,12 @@ class MainActivity :
                             contacts?.forEach { contact ->
                                 val phone = contact["phone"] as? String
                                 if (phone != null) {
-                                    val smsManager = android.telephony.SmsManager.getDefault()
+                                    val smsManager = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                                        getSystemService(android.telephony.SmsManager::class.java)
+                                    } else {
+                                        @Suppress("DEPRECATION")
+                                        android.telephony.SmsManager.getDefault()
+                                    }
                                     smsManager.sendTextMessage(phone, null, message, null, null)
                                     Log.d("MainActivity", "📱 Location SMS sent to: $phone")
                                 }
@@ -2822,7 +2827,12 @@ class MainActivity :
                 }
             }
             
-            val smsManager = android.telephony.SmsManager.getDefault()
+            val smsManager = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                getSystemService(android.telephony.SmsManager::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                android.telephony.SmsManager.getDefault()
+            }
             val userName = getCurrentUserName()
             val currentTime = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date())
             
