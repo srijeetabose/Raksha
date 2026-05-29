@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'dart:io';
 
@@ -98,11 +98,11 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen> {
         _isLoading = false;
       });
 
-      // debug removed
-      // debug removed
+      print("✅ Audio player initialized: $filePath");
+      print("✅ File size: ${file.lengthSync()} bytes");
 
     } catch (e) {
-      // debug removed
+      print("❌ Error initializing player: $e");
       setState(() {
         _errorMessage = "Error loading audio: $e";
         _isLoading = false;
@@ -118,7 +118,7 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen> {
         await _audioPlayer.resume();
       }
     } catch (e) {
-      // debug removed
+      print("❌ Error playing/pausing: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error: $e")),
       );
@@ -129,7 +129,7 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen> {
     try {
       await _audioPlayer.seek(position);
     } catch (e) {
-      // debug removed
+      print("❌ Error seeking: $e");
     }
   }
 
@@ -150,7 +150,7 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(" Play Recording"),
+        title: const Text("🎵 Play Recording"),
         backgroundColor: Colors.purple,
         foregroundColor: Colors.white,
       ),

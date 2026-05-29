@@ -1,4 +1,4 @@
-﻿package com.example.raksha
+package com.example.raksha
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -10,7 +10,7 @@ class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == Intent.ACTION_BOOT_COMPLETED ||
             intent.action == "android.intent.action.QUICKBOOT_POWERON") {
-            Log.d("BootReceiver", " Device booted — starting Raksha background service")
+            Log.d("BootReceiver", "📱 Device booted — starting Raksha background service")
             val serviceIntent = Intent(context, RakshaForegroundService::class.java).apply {
                 action = RakshaForegroundService.ACTION_START_LISTENER
             }

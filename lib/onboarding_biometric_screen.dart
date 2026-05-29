@@ -1,4 +1,4 @@
-﻿// lib/onboarding_biometric_screen.dart
+// lib/onboarding_biometric_screen.dart
 
 import 'package:flutter/material.dart';
 import 'package:local_auth/local_auth.dart';
@@ -24,7 +24,6 @@ class _OnboardingBiometricScreenState extends State<OnboardingBiometricScreen> {
     _checkBiometrics();
   }
 
-  // Check if the device supports biometrics
   Future<void> _checkBiometrics() async {
     try {
       final bool canCheck = await _localAuth.canCheckBiometrics;
@@ -39,7 +38,7 @@ class _OnboardingBiometricScreenState extends State<OnboardingBiometricScreen> {
     }
   }
 
-  // Attempt to enroll the user's biometrics
+  
   Future<void> _enrollBiometrics() async {
     if (!_canCheckBiometrics) {
       _showSnackBar("Biometrics not available. Skipping setup.");
@@ -59,9 +58,8 @@ class _OnboardingBiometricScreenState extends State<OnboardingBiometricScreen> {
         return;
       }
       
-      // debug removed
+      print("Available biometrics: $availableBiometrics");
       
-      // Try biometric-only first, then fallback to device credentials
       bool didAuthenticate = false;
       
       try {
@@ -70,11 +68,11 @@ class _OnboardingBiometricScreenState extends State<OnboardingBiometricScreen> {
           options: const AuthenticationOptions(
             stickyAuth: true,
             useErrorDialogs: true,
-            biometricOnly: true, // Only use biometrics, not device PIN
+            biometricOnly: true, 
           ),
         );
       } catch (biometricError) {
-        // debug removed
+        print("Biometric-only failed: $biometricError");
         
         // Fallback to device credentials (PIN/Pattern/Password)
         try {
@@ -87,13 +85,13 @@ class _OnboardingBiometricScreenState extends State<OnboardingBiometricScreen> {
             ),
           );
         } catch (fallbackError) {
-          // debug removed
+          print("Fallback authentication failed: $fallbackError");
           throw fallbackError; // Re-throw to be handled by outer catch
         }
       }
 
       if (didAuthenticate) {
-        // Success: Save flag and navigate
+        
         _showSnackBar("Biometrics set successfully! Proceeding to Home.");
         await _saveBiometricFlag();
         _finalizeAndNavigate(); 
@@ -102,12 +100,10 @@ class _OnboardingBiometricScreenState extends State<OnboardingBiometricScreen> {
         _finalizeAndNavigate();
       }
     } catch (e) {
-      // debug removed
-      // Handle the use_build_context_synchronously warning by checking mounted
+      print("Biometric error: $e");
       if (mounted) {
         String errorMessage = "Biometric setup failed. You can set this up later in Settings.";
         
-        // More comprehensive error handling
         String errorStr = e.toString().toLowerCase();
         if (errorStr.contains('no_fragment_activity') || errorStr.contains('fragmentactivity')) {
           errorMessage = "Biometric setup requires app restart. Please restart the app and try again.";
@@ -145,7 +141,7 @@ class _OnboardingBiometricScreenState extends State<OnboardingBiometricScreen> {
         });
       }
     } catch (e) {
-      // debug removed
+      print("Error saving biometric flag: $e");
     }
   }
   
@@ -190,7 +186,7 @@ class _OnboardingBiometricScreenState extends State<OnboardingBiometricScreen> {
     );
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Step 1b: Biometric Recovery")),
+      appBar: AppBar(title: const Text("Biometric Setup")),
       body: Container(
         decoration: gradient,
         child: Center(

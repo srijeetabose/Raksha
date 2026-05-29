@@ -1,4 +1,4 @@
-﻿// lib/vault_content_screen.dart
+// lib/vault_content_screen.dart
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -40,7 +40,7 @@ class _VaultContentScreenState extends State<VaultContentScreen> {
         });
       }
     } catch (e) {
-      // debug removed
+      print("Error checking recording status: $e");
     }
   }
 
@@ -53,7 +53,7 @@ class _VaultContentScreenState extends State<VaultContentScreen> {
       
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(" Stealth recording stopped. Uploading to secure cloud storage..."),
+          content: Text("🛑 Stealth recording stopped. Uploading to secure cloud storage..."),
           backgroundColor: Colors.green,
         ),
       );
@@ -82,7 +82,7 @@ class _VaultContentScreenState extends State<VaultContentScreen> {
         
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text(" Emergency status updated to SAFE. Recordings are being uploaded to permanent cloud storage."),
+            content: Text("✅ Emergency status updated to SAFE. Recordings are being uploaded to permanent cloud storage."),
             backgroundColor: Colors.blue,
           ),
         );
@@ -93,7 +93,7 @@ class _VaultContentScreenState extends State<VaultContentScreen> {
           MaterialPageRoute(builder: (_) => const HomeScreen()), (route) => false);
           
     } catch (e) {
-      // debug removed
+      print("❌ Error stopping recording: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("Error stopping recording: $e"),
@@ -119,7 +119,7 @@ class _VaultContentScreenState extends State<VaultContentScreen> {
       appBar: AppBar(title: const Text("Secure Vault (Tamper-Proof)")),
       body: Column(
         children: [
-          //  CRITICAL: I AM SAFE Button (Shows only if recording is active)
+          // ⚠️ CRITICAL: I AM SAFE Button (Shows only if recording is active)
           if (_isRecordingActive)
             Container(
               width: double.infinity,
@@ -180,7 +180,7 @@ class _VaultContentScreenState extends State<VaultContentScreen> {
                             Text("Date: ${timestamp.toString().substring(0, 16)}"),
                             Text("ID: ${recordingId.substring(0, 12)}..."),
                             const Text(
-                              " PERMANENT - Cannot be deleted",
+                              "🔒 PERMANENT - Cannot be deleted",
                               style: TextStyle(
                                 color: Colors.red,
                                 fontSize: 12,
@@ -230,7 +230,7 @@ class _VaultContentScreenState extends State<VaultContentScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text(
-          " Emergency Recording Details",
+          "🔒 Emergency Recording Details",
           style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
         ),
         content: Column(
@@ -244,7 +244,7 @@ class _VaultContentScreenState extends State<VaultContentScreen> {
             _buildDetailRow("Android Version:", deviceInfo['androidVersion'] ?? 'Unknown'),
             const SizedBox(height: 16),
             const Text(
-              " Files Included:",
+              "📁 Files Included:",
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             const Text("• Audio recording (3GP format)"),
@@ -258,7 +258,7 @@ class _VaultContentScreenState extends State<VaultContentScreen> {
                 border: Border.all(color: Colors.red),
               ),
               child: const Text(
-                " SECURITY NOTICE:\nThese recordings are permanently stored in encrypted cloud storage and cannot be deleted by anyone, including the user. They serve as tamper-proof evidence.",
+                "🛡️ SECURITY NOTICE:\nThese recordings are permanently stored in encrypted cloud storage and cannot be deleted by anyone, including the user. They serve as tamper-proof evidence.",
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.red,

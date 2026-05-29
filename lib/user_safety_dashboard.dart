@@ -1,4 +1,4 @@
-﻿// lib/user_safety_dashboard.dart
+// lib/user_safety_dashboard.dart
 
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -83,14 +83,14 @@ class _UserSafetyDashboardState extends State<UserSafetyDashboard> {
         }
       }
     } catch (e) {
-      // debug removed
+      print("Error loading contact count: $e");
     }
   }
   
   // Initialize voice detection
   Future<void> _initializeVoiceDetection() async {
     try {
-      // debug removed
+      print("🎤 Initializing NATIVE voice detection...");
       
       // Load voice triggers from Firestore
       final userId = FirebaseAuth.instance.currentUser?.uid;
@@ -109,14 +109,14 @@ class _UserSafetyDashboardState extends State<UserSafetyDashboard> {
               'triggers': triggers,
             });
             
-            // debug removed
+            print("🎤 Native voice detection started with triggers: $triggers");
           } else {
-            // debug removed
+            print("⚠️ No voice triggers set up");
           }
         }
       }
     } catch (e) {
-      // debug removed
+      print("❌ Error initializing voice detection: $e");
     }
   }
   
@@ -125,7 +125,7 @@ class _UserSafetyDashboardState extends State<UserSafetyDashboard> {
     if (!_isVoiceSetUp) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(" Voice triggers not set up. Go to Voice Triggers to set them up first."),
+          content: Text("❌ Voice triggers not set up. Go to Voice Triggers to set them up first."),
           backgroundColor: Colors.red,
         ),
       );
@@ -135,7 +135,7 @@ class _UserSafetyDashboardState extends State<UserSafetyDashboard> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text(' Voice Detection Test'),
+        title: const Text('🎤 Voice Detection Test'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -163,7 +163,7 @@ class _UserSafetyDashboardState extends State<UserSafetyDashboard> {
         Navigator.of(context).pop(); // Close test dialog
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(" Voice trigger '$trigger' detected successfully!"),
+            content: Text("✅ Voice trigger '$trigger' detected successfully!"),
             backgroundColor: Colors.green,
           ),
         );
@@ -173,7 +173,7 @@ class _UserSafetyDashboardState extends State<UserSafetyDashboard> {
 
   // Trigger SOS from voice detection
   void _triggerVoiceSOS(String trigger) {
-    // debug removed
+    print("🚨 VOICE SOS TRIGGERED: $trigger");
     
     // Show immediate alert
     if (mounted) {
@@ -181,13 +181,13 @@ class _UserSafetyDashboardState extends State<UserSafetyDashboard> {
         context: context,
         barrierDismissible: false,
         builder: (context) => AlertDialog(
-          title: const Text(' VOICE TRIGGER DETECTED!'),
+          title: const Text('🚨 VOICE TRIGGER DETECTED!'),
           content: Text('Voice trigger "$trigger" detected!\n\nSOS will activate in 10 seconds.\nTap CANCEL to stop.'),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                // debug removed
+                print("🛑 Voice SOS cancelled by user");
               },
               child: const Text('CANCEL', style: TextStyle(color: Colors.red, fontSize: 18)),
             ),
@@ -237,12 +237,12 @@ class _UserSafetyDashboardState extends State<UserSafetyDashboard> {
         const platform = MethodChannel('com.example.raksha/gesture_service');
         await platform.invokeMethod('startVoiceDetection', {'triggers': voiceWords});
         setState(() => _isVoiceSetUp = true);
-        print(' Voice detection started with: $voiceWords');
+        print('🎤 Voice detection started with: $voiceWords');
       }
 
-      print(' Background services started');
+      print('✅ Background services started');
     } catch (e) {
-      print(' Failed to start background services: $e');
+      print('❌ Failed to start background services: $e');
     }
   }
 
@@ -303,7 +303,7 @@ class _UserSafetyDashboardState extends State<UserSafetyDashboard> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text(' Test Alert Mode'),
+        title: const Text('🧪 Test Alert Mode'),
         content: const Text(
           'Test Alert is now ACTIVE!\n\n'
           '• Perform one of your chosen gestures\n'
@@ -338,18 +338,18 @@ class _UserSafetyDashboardState extends State<UserSafetyDashboard> {
       // Show persistent notification that test mode is active
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(" TEST MODE ACTIVE - Perform your gesture or voice trigger"),
+          content: Text("🧪 TEST MODE ACTIVE - Perform your gesture or voice trigger"),
           backgroundColor: Colors.orange,
           duration: Duration(seconds: 10),
         ),
       );
       
-      // debug removed
+      print("🧪 Test mode activated - waiting for real gesture/voice detection");
       
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(" Failed to start test mode: $e"),
+          content: Text("❌ Failed to start test mode: $e"),
           backgroundColor: Colors.red,
         ),
       );
@@ -390,27 +390,27 @@ class _UserSafetyDashboardState extends State<UserSafetyDashboard> {
         _startContinuousLocationSharing();
         
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text(" SOS ACTIVE! Emergency alerts sent with live location.")),
+          const SnackBar(content: Text("🚨 SOS ACTIVE! Emergency alerts sent with live location.")),
         );
       }
     });
   }
   
   void _stopActiveSos() {
-    // debug removed
+    print("🛑 STOP LOCATION SHARING BUTTON PRESSED");
     
     setState(() {
       _isSosActive = false;
       _isPreSosCounting = false;
     });
     
-    // debug removed
+    print("🛑 State updated: _isSosActive = $_isSosActive");
     
     // Stop continuous location sharing
     _stopContinuousLocationSharing();
     
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text(" SOS STOPPED. Location sharing ended. You are safe.")),
+      const SnackBar(content: Text("✅ SOS STOPPED. Location sharing ended. You are safe.")),
     );
   }
 
@@ -422,17 +422,24 @@ class _UserSafetyDashboardState extends State<UserSafetyDashboard> {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) return;
 
-      // Get user's emergency contacts
-      final contactsSnapshot = await FirebaseFirestore.instance
+      // Get user's emergency contacts (stored as array field on the user document)
+      final userDoc = await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
-          .collection('emergency_contacts')
           .get();
 
-      if (contactsSnapshot.docs.isEmpty) {
-        // debug removed
+      final rawContacts = userDoc.data()?['emergencyContacts'] as List?;
+      if (rawContacts == null || rawContacts.isEmpty) {
+        print("No emergency contacts found");
         return;
       }
+
+      // Build a simple list of {name, phone} maps
+      final contacts = rawContacts
+          .whereType<Map>()
+          .map((c) => {'name': c['name'] as String? ?? '', 'phone': c['phone'] as String? ?? ''})
+          .where((c) => (c['phone'] as String).isNotEmpty)
+          .toList();
 
       // Create Firebase live location sharing document
       final emergencySessionId = DateTime.now().millisecondsSinceEpoch.toString();
@@ -450,57 +457,47 @@ class _UserSafetyDashboardState extends State<UserSafetyDashboard> {
           'longitude': _currentPosition!.longitude,
           'timestamp': FieldValue.serverTimestamp(),
         },
-        'emergencyContacts': contactsSnapshot.docs.map((doc) => {
-          'contactId': doc.id,
-          'name': doc.data()['name'],
-          'phone': doc.data()['phone'],
+        'emergencyContacts': contacts.map((c) => {
+          'name': c['name'],
+          'phone': c['phone'],
         }).toList(),
       });
 
-      // Create live location sharing link using your Firebase project
-      final liveLocationUrl = "https://raksha-11563.web.app/live-location/$emergencySessionId";
+      // Build the live location URL using the current GPS coordinates (Google Maps link)
+      // The Firebase web app URL is kept as a fallback if deployed in future.
+      final lat = _currentPosition!.latitude;
+      final lng = _currentPosition!.longitude;
+      final liveLocationUrl = "https://maps.google.com/?q=$lat,$lng";
       
       // Get current time
       final now = DateTime.now();
       final timeStr = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
       
-      // Create emergency message with LIVE location link
-      final emergencyMessage = """
- EMERGENCY ALERT - RAKSHA SAFETY APP 
-
-I NEED IMMEDIATE HELP!
-
- MY LIVE LOCATION (REAL-TIME):
-$liveLocationUrl
-
-� Emergency Started: $timeStr
- This link shows my LIVE location that updates automatically
-
- IMPORTANT: This live location will continue updating until I manually stop it from my phone.
-
-Please call me immediately or contact emergency services if you cannot reach me.
-
-- Sent automatically by Raksha Safety App
-""";
+      // Create emergency message with live location link
+      final emergencyMessage =
+          "🚨 EMERGENCY ALERT 🚨\n\n"
+          "I NEED IMMEDIATE HELP!\n\n"
+          "📍 Live Location:\n$liveLocationUrl\n\n"
+          "🕐 Emergency Started: $timeStr\n\n"
+          "Please call me immediately or contact emergency services.\n\n"
+          "- Sent automatically by Raksha Safety App";
 
       // Send SMS to all emergency contacts
-      for (var contactDoc in contactsSnapshot.docs) {
-        final contactData = contactDoc.data();
-        final phoneNumber = contactData['phone'] as String?;
-        
+      for (final contact in contacts) {
+        final phoneNumber = contact['phone'];
         if (phoneNumber != null && phoneNumber.isNotEmpty) {
           await _sendSMSMessage(phoneNumber, emergencyMessage);
-          // debug removed
+          print("📱 Emergency SMS sent to: $phoneNumber");
         }
       }
 
       // Store the session ID for later use
       _currentEmergencySessionId = emergencySessionId;
       
-      // debug removed
+      print("✅ Emergency SMS sent to ${contacts.length} contacts");
       
     } catch (e) {
-      // debug removed
+      print("❌ Error sending emergency SMS: $e");
     }
   }
 
@@ -513,7 +510,7 @@ Please call me immediately or contact emergency services if you cannot reach me.
         'message': message,
       });
     } catch (e) {
-      // debug removed
+      print("❌ Failed to send SMS to $phoneNumber: $e");
     }
   }
 
@@ -521,7 +518,7 @@ Please call me immediately or contact emergency services if you cannot reach me.
   Timer? _locationSharingTimer;
   
   void _startContinuousLocationSharing() {
-    // debug removed
+    print("🌍 Starting LIVE location sharing to Firebase...");
     
     // Update Firebase with live location every 10 seconds
     _locationSharingTimer = Timer.periodic(const Duration(seconds: 10), (timer) async {
@@ -545,21 +542,21 @@ Please call me immediately or contact emergency services if you cannot reach me.
         await _updateLiveLocationInFirebase(position);
         
       } catch (e) {
-        // debug removed
+        print("❌ Error updating live location: $e");
       }
     });
   }
 
   // Stop continuous location sharing
   void _stopContinuousLocationSharing() {
-    // debug removed
+    print("🛑 Stopping continuous location sharing...");
     
     if (_locationSharingTimer != null) {
       _locationSharingTimer?.cancel();
       _locationSharingTimer = null;
-      // debug removed
+      print("✅ Location sharing timer cancelled");
     } else {
-      // debug removed
+      print("⚠️ No active location sharing timer found");
     }
     
     // End Firebase emergency session
@@ -568,7 +565,7 @@ Please call me immediately or contact emergency services if you cannot reach me.
     // Send final message to contacts
     _sendLocationStoppedMessage();
     
-    // debug removed
+    print("🛑 LIVE location sharing completely stopped");
   }
 
   // Update live location in Firebase (real-time for emergency contacts)
@@ -590,10 +587,10 @@ Please call me immediately or contact emergency services if you cannot reach me.
         'lastUpdated': FieldValue.serverTimestamp(),
       });
 
-      // debug removed
+      print("📍 Live location updated in Firebase: ${position.latitude}, ${position.longitude}");
       
     } catch (e) {
-      // debug removed
+      print("❌ Error updating live location in Firebase: $e");
     }
   }
 
@@ -611,11 +608,11 @@ Please call me immediately or contact emergency services if you cannot reach me.
         'endedBy': 'user',
       });
 
-      // debug removed
+      print("✅ Emergency session ended in Firebase");
       _currentEmergencySessionId = null;
       
     } catch (e) {
-      // debug removed
+      print("❌ Error ending emergency session: $e");
     }
   }
 
@@ -625,41 +622,38 @@ Please call me immediately or contact emergency services if you cannot reach me.
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) return;
 
-      final contactsSnapshot = await FirebaseFirestore.instance
+      // Read contacts from the same array field used everywhere else
+      final userDoc = await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
-          .collection('emergency_contacts')
           .get();
+
+      final rawContacts = userDoc.data()?['emergencyContacts'] as List?;
+      if (rawContacts == null || rawContacts.isEmpty) return;
+
+      final contacts = rawContacts
+          .whereType<Map>()
+          .map((c) => c['phone'] as String? ?? '')
+          .where((p) => p.isNotEmpty)
+          .toList();
 
       final timeStr = DateTime.now().toString().substring(11, 16);
       
-      final stoppedMessage = """
- EMERGENCY RESOLVED - ${timeStr}
+      final stoppedMessage =
+          "✅ EMERGENCY RESOLVED - $timeStr\n\n"
+          "I have manually stopped the emergency alert.\n\n"
+          "I am now safe and no longer need assistance.\n\n"
+          "Thank you for your concern.\n\n"
+          "- Raksha Safety App";
 
-I have manually stopped the emergency alert and LIVE location sharing.
-
- The live location link is now INACTIVE and will no longer update.
-
-I am now safe and no longer need assistance.
-
-Thank you for your concern and quick response.
-
-- Raksha Safety App
-""";
-
-      for (var contactDoc in contactsSnapshot.docs) {
-        final contactData = contactDoc.data();
-        final phoneNumber = contactData['phone'] as String?;
-        
-        if (phoneNumber != null && phoneNumber.isNotEmpty) {
-          await _sendSMSMessage(phoneNumber, stoppedMessage);
-        }
+      for (final phoneNumber in contacts) {
+        await _sendSMSMessage(phoneNumber, stoppedMessage);
       }
 
-      // debug removed
+      print("✅ Emergency resolved message sent to ${contacts.length} contacts");
       
     } catch (e) {
-      // debug removed
+      print("❌ Error sending emergency resolved message: $e");
     }
   }
 
@@ -817,7 +811,7 @@ class _HomeMapContentView extends StatelessWidget {
                       Icon(Icons.location_on, color: Colors.red[600], size: 24),
                       const SizedBox(width: 8),
                       Text(
-                        " LIVE LOCATION SHARING ACTIVE",
+                        "🚨 LIVE LOCATION SHARING ACTIVE",
                         style: TextStyle(
                           color: Colors.red[600],
                           fontSize: 16,

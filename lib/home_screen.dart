@@ -1,4 +1,4 @@
-﻿// lib/home_screen.dart
+// lib/home_screen.dart
 // This file acts as the main Router/Wrapper for the Home Dashboard.
 
 import 'dart:async';
@@ -45,17 +45,42 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _startBackgroundServices() async {
     await Future.delayed(const Duration(seconds: 2));
     try {
+      // Load the user's saved triggers from Firestore — never use hardcoded words
+      final userId = FirebaseAuth.instance.currentUser?.uid;
+      if (userId == null) return;
+
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .get();
+      final data = doc.data() ?? {};
+
+      final voiceWords =
+          (data['triggerVoiceWords'] as List<dynamic>?)?.cast<String>() ??
+          (data['voiceTriggers'] as List<dynamic>?)?.cast<String>() ??
+          <String>[];
+
+      final gestures =
+          (data['triggerGestures'] as List<dynamic>?)?.cast<String>() ??
+          <String>[];
+
       const platform = MethodChannel('com.example.raksha/gesture_service');
       await platform.invokeMethod('startRealBackgroundService', {
-        'gestures': ['Thumb_Up', 'Victory', 'Closed_Fist'],
+        'gestures': gestures.isNotEmpty
+            ? gestures
+            : ['Thumb_Up', 'Victory', 'Closed_Fist'],
         'crossApp': true,
       });
-      await Future.delayed(const Duration(milliseconds: 500));
-      await platform.invokeMethod('startVoiceDetection', {
-        'triggers': ['help me', 'emergency', 'call police'],
-      });
+
+      if (voiceWords.isNotEmpty) {
+        await Future.delayed(const Duration(milliseconds: 500));
+        await platform.invokeMethod('startVoiceDetection', {
+          'triggers': voiceWords,
+        });
+        print('🎤 HomeScreen started voice detection with: $voiceWords');
+      }
     } catch (e) {
-      // debug removed
+      print("❌ Error starting background services: $e");
     }
   }
 
@@ -76,7 +101,7 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       }
     } catch (e) {
-      // debug removed
+      print("Error checking police role: $e");
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -302,8 +327,8 @@ class _PoliceAlertsDashboardState extends State<PoliceAlertsDashboard> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(newValue
-              ? ' You are now Active — receiving alerts'
-              : '� You are now Inactive'),
+              ? '✅ You are now Active — receiving alerts'
+              : '🔴 You are now Inactive'),
           backgroundColor: newValue ? Colors.green : Colors.red,
         ));
       }
@@ -370,7 +395,7 @@ class _PoliceAlertsDashboardState extends State<PoliceAlertsDashboard> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text(' Responding to Alert'),
+        title: const Text('🚨 Responding to Alert'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -671,7 +696,7 @@ class _PoliceAlertsDashboardState extends State<PoliceAlertsDashboard> {
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
-                        isResponding ? '� RESPONDING' : ' SOS ACTIVE',
+                        isResponding ? '🚔 RESPONDING' : '🚨 SOS ACTIVE',
                         style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,

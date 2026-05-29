@@ -1,4 +1,4 @@
-﻿package com.example.raksha
+package com.example.raksha
 
 import android.app.Activity
 import android.content.BroadcastReceiver
@@ -22,7 +22,7 @@ class VoiceListenerActivity : Activity() {
     private val stopReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action == "com.example.raksha.STOP_VOICE_LISTENER") {
-                Log.d(TAG, " Stop received")
+                Log.d(TAG, "🛑 Stop received")
                 finish()
             }
         }
@@ -30,7 +30,7 @@ class VoiceListenerActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Log.d(TAG, " VoiceListenerActivity created (process anchor)")
+        Log.d(TAG, "✅ VoiceListenerActivity created (process anchor)")
 
         // Invisible 1x1 window
         window.setLayout(1, 1)

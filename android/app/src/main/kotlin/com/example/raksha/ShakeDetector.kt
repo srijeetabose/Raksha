@@ -1,4 +1,4 @@
-﻿package com.example.raksha
+package com.example.raksha
 
 import android.content.Context
 import android.content.Intent
@@ -37,15 +37,15 @@ class ShakeDetector(private val context: Context) : SensorEventListener {
                 accelerometer,
                 SensorManager.SENSOR_DELAY_NORMAL
             )
-            Log.d(TAG, " Shake detector started")
+            Log.d(TAG, "✅ Shake detector started")
         } else {
-            Log.e(TAG, " No accelerometer found")
+            Log.e(TAG, "❌ No accelerometer found")
         }
     }
     
     fun stop() {
         sensorManager?.unregisterListener(this)
-        Log.d(TAG, " Shake detector stopped")
+        Log.d(TAG, "🛑 Shake detector stopped")
     }
     
     override fun onSensorChanged(event: SensorEvent?) {
@@ -67,7 +67,7 @@ class ShakeDetector(private val context: Context) : SensorEventListener {
                 // Prevent multiple triggers
                 if (currentTime - lastShakeTime > SHAKE_COOLDOWN) {
                     lastShakeTime = currentTime
-                    Log.d(TAG, " SHAKE DETECTED! Acceleration: $accelerationWithoutGravity")
+                    Log.d(TAG, "🚨 SHAKE DETECTED! Acceleration: $accelerationWithoutGravity")
                     shakeListener?.invoke()
                 }
             }

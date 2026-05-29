@@ -1,10 +1,11 @@
-﻿// lib/onboarding_voice_screen.dart
+// lib/onboarding_voice_screen.dart
 
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:raksha/home_screen.dart';
 import 'package:raksha/trigger_words_translations.dart';
+import 'package:raksha/sos_service_channel.dart';
 
 class OnboardingVoiceScreen extends StatefulWidget {
   const OnboardingVoiceScreen({super.key});
@@ -40,26 +41,27 @@ class _OnboardingVoiceScreenState extends State<OnboardingVoiceScreen> {
       final doc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
       if (doc.exists) {
         final data = doc.data()!;
-        // Load language and update word list
         final lang = data['voiceLanguage'] as String? ?? 'en-IN';
         final translatedWords = TriggerWordTranslations.getWords(lang);
-        final triggers = (data['triggerVoiceWords'] as List<dynamic>?)?.cast<String>()
+        final savedTriggers = (data['triggerVoiceWords'] as List<dynamic>?)?.cast<String>()
             ?? (data['voiceTriggers'] as List<dynamic>?)?.cast<String>()
             ?? [];
+
+        // Restore previously selected words — match case-insensitively against
+        // the translated word list so the chips show as highlighted on re-open.
+        final restoredSelection = savedTriggers.map((saved) {
+          return translatedWords.firstWhere(
+            (w) => w.toLowerCase() == saved.toLowerCase(),
+            orElse: () => saved,
+          );
+        }).toList();
+
         if (mounted) {
           setState(() {
             _languageCode = lang;
             availableWords = translatedWords;
-            if (triggers.isNotEmpty) {
-              // Normalize to match translated words
-              final normalized = triggers.map((t) {
-                return availableWords.firstWhere(
-                  (w) => w.toLowerCase() == t.toLowerCase(),
-                  orElse: () => t,
-                );
-              }).toList();
-              selectedWords = normalized;
-            }
+            // Restore the user's previously saved selection — do NOT reset to []
+            selectedWords = restoredSelection;
           });
         }
       }
@@ -80,7 +82,7 @@ class _OnboardingVoiceScreenState extends State<OnboardingVoiceScreen> {
         }
       }
     });
-    // debug removed // Debug
+    print("Selected words: $selectedWords"); // Debug
   }
 
   Future<void> _saveWordsAndContinue() async {
@@ -99,7 +101,17 @@ class _OnboardingVoiceScreenState extends State<OnboardingVoiceScreen> {
         'onboardingStep': 'voice_complete',
       }, SetOptions(merge: true));
 
-      // debug removed
+      print("✅ Voice triggers saved: $selectedWords");
+
+      // Immediately restart the background service with the new trigger words
+      // so the running service picks them up without needing an app restart.
+      try {
+        await SosServiceChannel.startBackgroundService([], selectedWords);
+        print("✅ Background service restarted with new triggers: $selectedWords");
+      } catch (e) {
+        print("⚠️ Could not restart service: $e");
+      }
+
       _showSnackBar("Voice triggers saved successfully!");
       
       // Navigate to home screen
@@ -309,10 +321,16 @@ class _OnboardingVoiceScreenState extends State<OnboardingVoiceScreen> {
                               final canSelect = selectedWords.length < 3 || isSelected;
 
                               return InkWell(
-                                onTap: canSelect ? () {
-                                  // debug removed
-                                  _toggleWord(word);
-                                } : null,
+                                onTap: () {
+                                  if (!isSelected && selectedWords.length >= 3) {
+                                    setState(() {
+                                      selectedWords.removeAt(0);
+                                      selectedWords.add(word);
+                                    });
+                                  } else {
+                                    _toggleWord(word);
+                                  }
+                                },
                                 borderRadius: BorderRadius.circular(12),
                                 child: AnimatedContainer(
                                   duration: const Duration(milliseconds: 200),

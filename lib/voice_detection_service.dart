@@ -1,4 +1,4 @@
-﻿// lib/voice_detection_service.dart
+// lib/voice_detection_service.dart
 
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -22,10 +22,10 @@ class VoiceDetectionService {
     try {
       await _loadTriggerWords();
       _isInitialized = true;
-      // debug removed
+      print("✅ Voice detection initialized with native Android speech recognition");
       return true;
     } catch (e) {
-      // debug removed
+      print("❌ Failed to initialize voice detection: $e");
       return false;
     }
   }
@@ -39,11 +39,11 @@ class VoiceDetectionService {
         if (doc.exists) {
           final words = doc.data()?['voiceTriggers'] as List?;
           _triggerWords = words?.cast<String>() ?? ['help me', 'emergency', 'call police'];
-          // debug removed
+          print("🎤 Loaded trigger words: $_triggerWords");
         }
       }
     } catch (e) {
-      // debug removed
+      print("❌ Error loading trigger words: $e");
       // Default trigger words if loading fails
       _triggerWords = ['help me', 'emergency', 'call police'];
     }
@@ -52,13 +52,13 @@ class VoiceDetectionService {
   // Reload trigger words (call this when user updates triggers)
   Future<void> reloadTriggerWords() async {
     await _loadTriggerWords();
-    // debug removed
+    print("🔄 Trigger words reloaded: $_triggerWords");
   }
 
   // Start continuous listening using native Android implementation
   Future<void> startListening({Function(String)? onTriggerDetected}) async {
     if (!_isInitialized) {
-      // debug removed
+      print("❌ Voice detection not initialized");
       return;
     }
 
@@ -71,10 +71,10 @@ class VoiceDetectionService {
       });
       
       _isListening = true;
-      // debug removed
+      print("🎤 Started native Android voice listening for triggers: $_triggerWords");
       
     } catch (e) {
-      // debug removed
+      print("❌ Error starting native voice listening: $e");
     }
   }
 
@@ -83,15 +83,15 @@ class VoiceDetectionService {
     try {
       await _channel.invokeMethod('stopVoiceDetection');
       _isListening = false;
-      // debug removed
+      print("🛑 Stopped native voice listening");
     } catch (e) {
-      // debug removed
+      print("❌ Error stopping voice listening: $e");
     }
   }
 
   // Handle voice trigger detected (called from MainActivity)
   void onVoiceTriggerDetected(String trigger) {
-    // debug removed
+    print("🚨 VOICE TRIGGER DETECTED: $trigger");
     _onTriggerDetected?.call(trigger);
   }
 

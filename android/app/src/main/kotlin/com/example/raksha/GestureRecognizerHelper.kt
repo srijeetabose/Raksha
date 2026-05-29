@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright 2022 The TensorFlow Authors. All Rights Reserved.
  * Adapted for Raksha Safety App
  */
@@ -35,12 +35,12 @@ class GestureRecognizerHelper(
     private var gestureRecognizer: GestureRecognizer? = null
 
     init {
-        Log.d(TAG, " GestureRecognizerHelper init() called")
+        Log.d(TAG, "🚀 GestureRecognizerHelper init() called")
         try {
             setupGestureRecognizer()
-            Log.d(TAG, " setupGestureRecognizer() completed in init")
+            Log.d(TAG, "✅ setupGestureRecognizer() completed in init")
         } catch (e: Exception) {
-            Log.e(TAG, " Exception in init: ${e.message}")
+            Log.e(TAG, "❌ Exception in init: ${e.message}")
             e.printStackTrace()
         }
     }
@@ -55,7 +55,7 @@ class GestureRecognizerHelper(
     }
 
     fun forceReinitialize() {
-        Log.d(TAG, " Force reinitializing GestureRecognizer...")
+        Log.d(TAG, "🔄 Force reinitializing GestureRecognizer...")
         clearGestureRecognizer()
         setupGestureRecognizer()
     }
@@ -65,7 +65,7 @@ class GestureRecognizerHelper(
     // that are created on the main thread and used on a background thread, but
     // the GPU delegate needs to be used on the thread that initialized the recognizer
     fun setupGestureRecognizer() {
-        Log.d(TAG, " Starting MediaPipe GestureRecognizer setup...")
+        Log.d(TAG, "🚀 Starting MediaPipe GestureRecognizer setup...")
 
         // Clear any existing recognizer
         gestureRecognizer?.close()
@@ -76,33 +76,33 @@ class GestureRecognizerHelper(
             val baseOptionBuilder = BaseOptions.builder()
 
             // Use CPU delegate for better compatibility
-            Log.d(TAG, " Using CPU delegate for MediaPipe")
+            Log.d(TAG, "📱 Using CPU delegate for MediaPipe")
             baseOptionBuilder.setDelegate(Delegate.CPU)
 
             // Set model path with validation
-            Log.d(TAG, " Setting model path: $MP_RECOGNIZER_TASK")
+            Log.d(TAG, "📁 Setting model path: $MP_RECOGNIZER_TASK")
 
             // Check if model file exists
             try {
                 val inputStream = context.assets.open(MP_RECOGNIZER_TASK)
                 val fileSize = inputStream.available()
                 inputStream.close()
-                Log.d(TAG, " Model file found, size: $fileSize bytes")
+                Log.d(TAG, "✅ Model file found, size: $fileSize bytes")
 
                 if (fileSize < 1000000) { // Less than 1MB is suspicious
-                    Log.w(TAG, " Model file seems too small: $fileSize bytes")
+                    Log.w(TAG, "⚠️ Model file seems too small: $fileSize bytes")
                 }
             } catch (e: Exception) {
-                Log.e(TAG, " Model file not found: ${e.message}")
+                Log.e(TAG, "❌ Model file not found: ${e.message}")
                 // Try alternative path
                 try {
-                    Log.d(TAG, " Trying alternative model path...")
+                    Log.d(TAG, "🔄 Trying alternative model path...")
                     val altInputStream = context.assets.open("gesture_recognizer_official.task")
                     altInputStream.close()
                     baseOptionBuilder.setModelAssetPath("gesture_recognizer_official.task")
-                    Log.d(TAG, " Using alternative model file")
+                    Log.d(TAG, "✅ Using alternative model file")
                 } catch (e2: Exception) {
-                    Log.e(TAG, " Alternative model also not found: ${e2.message}")
+                    Log.e(TAG, "❌ Alternative model also not found: ${e2.message}")
                     throw e
                 }
             }
@@ -110,7 +110,7 @@ class GestureRecognizerHelper(
             baseOptionBuilder.setModelAssetPath(MP_RECOGNIZER_TASK)
 
             val baseOptions = baseOptionBuilder.build()
-            Log.d(TAG, " BaseOptions created successfully")
+            Log.d(TAG, "✅ BaseOptions created successfully")
 
             val optionsBuilder =
                     GestureRecognizer.GestureRecognizerOptions.builder()
@@ -124,39 +124,39 @@ class GestureRecognizerHelper(
             if (runningMode == RunningMode.LIVE_STREAM) {
                 optionsBuilder.setResultListener(this::returnLivestreamResult)
                         .setErrorListener(this::returnLivestreamError)
-                Log.d(TAG, "� LIVE_STREAM mode with result listener configured")
+                Log.d(TAG, "🔧 LIVE_STREAM mode with result listener configured")
             } else {
-                Log.d(TAG, "� IMAGE mode configured")
+                Log.d(TAG, "🔧 IMAGE mode configured")
             }
 
-            Log.d(TAG, "� GestureRecognizerOptions configured")
+            Log.d(TAG, "🔧 GestureRecognizerOptions configured")
 
             val options = optionsBuilder.build()
-            Log.d(TAG, " Options built successfully")
+            Log.d(TAG, "✅ Options built successfully")
 
             gestureRecognizer = GestureRecognizer.createFromOptions(context, options)
 
             if (gestureRecognizer != null) {
-                Log.d(TAG, "� MediaPipe GestureRecognizer initialized successfully!")
+                Log.d(TAG, "🎉 MediaPipe GestureRecognizer initialized successfully!")
             } else {
-                Log.e(TAG, " GestureRecognizer is null after creation")
+                Log.e(TAG, "❌ GestureRecognizer is null after creation")
             }
         } catch (e: IllegalStateException) {
-            Log.e(TAG, " IllegalStateException during setup: ${e.message}")
+            Log.e(TAG, "❌ IllegalStateException during setup: ${e.message}")
             e.printStackTrace()
             gestureRecognizerListener?.onError(
                     "Gesture recognizer failed to initialize: ${e.message}",
                     1
             )
         } catch (e: RuntimeException) {
-            Log.e(TAG, " RuntimeException during setup: ${e.message}")
+            Log.e(TAG, "❌ RuntimeException during setup: ${e.message}")
             e.printStackTrace()
             gestureRecognizerListener?.onError(
                     "Gesture recognizer failed to initialize: ${e.message}",
                     GPU_ERROR
             )
         } catch (e: Exception) {
-            Log.e(TAG, " Unexpected exception during setup: ${e.message}")
+            Log.e(TAG, "❌ Unexpected exception during setup: ${e.message}")
             e.printStackTrace()
             gestureRecognizerListener?.onError(
                     "Gesture recognizer failed to initialize: ${e.message}",
@@ -222,19 +222,19 @@ class GestureRecognizerHelper(
 
         // Check if gesture recognizer is initialized
         if (gestureRecognizer == null) {
-            Log.e(TAG, " GestureRecognizer is null - not initialized properly")
+            Log.e(TAG, "❌ GestureRecognizer is null - not initialized properly")
             gestureRecognizerListener?.onError("Gesture Recognizer not initialized")
             return null
         }
 
         // Validate input bitmap
         if (image.isRecycled) {
-            Log.e(TAG, " Input bitmap is recycled")
+            Log.e(TAG, "❌ Input bitmap is recycled")
             gestureRecognizerListener?.onError("Input bitmap is recycled")
             return null
         }
 
-        Log.d(TAG, " Processing image: ${image.width}x${image.height}, config: ${image.config}")
+        Log.d(TAG, "🎯 Processing image: ${image.width}x${image.height}, config: ${image.config}")
 
         try {
             // Inference time is the difference between the system time at the
@@ -243,14 +243,14 @@ class GestureRecognizerHelper(
 
             // Convert the input Bitmap object to an MPImage object to run inference
             val mpImage = BitmapImageBuilder(image).build()
-            Log.d(TAG, " MPImage created successfully")
+            Log.d(TAG, "✅ MPImage created successfully")
 
             // Run gesture recognizer using MediaPipe Gesture Recognizer API
             val recognizerResult = gestureRecognizer!!.recognize(mpImage)
 
             if (recognizerResult != null) {
                 val inferenceTimeMs = SystemClock.uptimeMillis() - startTime
-                Log.d(TAG, " MediaPipe recognition completed in ${inferenceTimeMs}ms")
+                Log.d(TAG, "✅ MediaPipe recognition completed in ${inferenceTimeMs}ms")
 
                 // Process the result for our Raksha emergency detection
                 processGestureResultForRaksha(recognizerResult)
@@ -262,7 +262,7 @@ class GestureRecognizerHelper(
                         image.width
                 )
             } else {
-                Log.w(TAG, " MediaPipe returned null result - no gestures detected")
+                Log.w(TAG, "⚠️ MediaPipe returned null result - no gestures detected")
                 return ResultBundle(
                         emptyList(),
                         SystemClock.uptimeMillis() - startTime,
@@ -271,7 +271,7 @@ class GestureRecognizerHelper(
                 )
             }
         } catch (e: Exception) {
-            Log.e(TAG, " Exception during gesture recognition: ${e.message}")
+            Log.e(TAG, "❌ Exception during gesture recognition: ${e.message}")
             e.printStackTrace()
             gestureRecognizerListener?.onError("Gesture recognition failed: ${e.message}")
             return null
@@ -280,10 +280,10 @@ class GestureRecognizerHelper(
 
     // Process gesture results for Raksha emergency detection
     private fun processGestureResultForRaksha(result: GestureRecognizerResult) {
-        Log.d(TAG, "� Processing REAL MediaPipe result for Raksha...")
+        Log.d(TAG, "📊 Processing REAL MediaPipe result for Raksha...")
 
         if (result.gestures().isNotEmpty()) {
-            Log.d(TAG, " Found ${result.gestures().size} gesture categories")
+            Log.d(TAG, "🎯 Found ${result.gestures().size} gesture categories")
 
             val topGesture = result.gestures()[0]
             if (topGesture.isNotEmpty()) {
@@ -294,7 +294,7 @@ class GestureRecognizerHelper(
                 // LOG ALL DETECTED GESTURES FOR DEBUGGING
                 Log.d(
                         TAG,
-                        "� RAW MediaPipe Detection: '$gestureName' (confidence: ${(confidence * 100).toInt()}%)"
+                        "🔍 RAW MediaPipe Detection: '$gestureName' (confidence: ${(confidence * 100).toInt()}%)"
                 )
 
                 // Store result for MainActivity to access
@@ -307,7 +307,7 @@ class GestureRecognizerHelper(
                 if (mappedGesture != "Unknown" && confidence > 0.7f) {
                     Log.d(
                             TAG,
-                            " HIGH CONFIDENCE RAKSHA GESTURE DETECTED: $mappedGesture (original: '$gestureName', confidence: ${(confidence * 100).toInt()}%)"
+                            "✅ HIGH CONFIDENCE RAKSHA GESTURE DETECTED: $mappedGesture (original: '$gestureName', confidence: ${(confidence * 100).toInt()}%)"
                     )
 
                     // Notify Raksha listeners about the detected gesture
@@ -330,10 +330,10 @@ class GestureRecognizerHelper(
                     Log.d(TAG, "  Gesture $i: ${g.categoryName()} (${(g.score() * 100).toInt()}%)")
                 }
             } else {
-                Log.d(TAG, " Top gesture category is empty")
+                Log.d(TAG, "⚠️ Top gesture category is empty")
             }
         } else {
-            Log.d(TAG, "� No gestures detected in this frame")
+            Log.d(TAG, "👁️ No gestures detected in this frame")
         }
     }
 
@@ -357,7 +357,7 @@ class GestureRecognizerHelper(
             else -> {
                 Log.w(
                         TAG,
-                        "� UNKNOWN/UNMAPPED GESTURE: '$originalName' - Ignoring for Raksha accuracy"
+                        "🔍 UNKNOWN/UNMAPPED GESTURE: '$originalName' - Ignoring for Raksha accuracy"
                 )
                 "Unknown" // Return Unknown instead of the original name
             }
@@ -378,7 +378,7 @@ class GestureRecognizerHelper(
         gestureRecognizerListener?.onResults(customResult)
 
         // Also log for Raksha debugging
-        Log.d(TAG, " RAKSHA GESTURE NOTIFICATION: $gestureName (${(confidence * 100).toInt()}%)")
+        Log.d(TAG, "🚨 RAKSHA GESTURE NOTIFICATION: $gestureName (${(confidence * 100).toInt()}%)")
     }
 
     // Return running status of the recognizer helper

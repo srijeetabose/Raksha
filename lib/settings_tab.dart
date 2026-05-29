@@ -1,4 +1,4 @@
-﻿// lib/settings_tab.dart
+// lib/settings_tab.dart
 
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -228,7 +228,7 @@ class _SettingsTabState extends State<SettingsTab> {
       body: Stack(
         children: [
           SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 100.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -506,6 +506,15 @@ class _VoiceWordPickerSheetState extends State<_VoiceWordPickerSheet> {
         'voiceTriggers': _selected,
         'isVoiceDetectionEnabled': true,
       }, SetOptions(merge: true));
+
+      // Immediately push new triggers to the running background service
+      try {
+        await SosServiceChannel.startBackgroundService([], _selected);
+        print("✅ Service restarted with new triggers: $_selected");
+      } catch (e) {
+        print("⚠️ Could not restart service: $e");
+      }
+
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
